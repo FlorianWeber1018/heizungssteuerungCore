@@ -40,7 +40,7 @@ namespace Module{
       ( this->DeviceID == otherSig.DeviceID && this->PortType == otherSig.PortType && this->Port == otherSig.Port && this->Pin <  otherSig.Pin )
     );
   }
-};*/
+};
 struct mySqlParam{
   unsigned int ID;
   std::string paramKey;
@@ -58,7 +58,7 @@ struct mySqlParam{
       (this->ID ==  otherParam.ID   &&  this->paramKey  <  otherParam.paramKey)
     );
   }
-};
+};*/
 
 struct Slot
 {
@@ -75,6 +75,7 @@ struct Signal
   int max = INT_MAX;
   std::vector<Slot*> m_slots;
 };
+
 class Module
 {
 public:
@@ -88,21 +89,23 @@ public:
   Module();
   unsigned int ID = 0;
 private:
-
+  void getParamFromServerIfExists(const std::string& paramKey, int& outParam); //TODO
+  void createParamOrUpdateOnServer(const std::string& paramKey, const int& newParamValue); //TODO
 protected:
   std::vector<Module*> m_postModules;
   std::map<std::string, Signal*> m_signals;
   std::map<std::string, Slot*> m_slots;
-  std::map<std::string, int> m_params; //TODO
+  std::map<std::string, int> m_params;
   Signal* createSignal(std::string signalName);
   Slot* createSlot(std::string slotName);
+  int* createParam(std::string paramKey, int defaultValue); // TO TEST
   void triggerNext();
   virtual void process();
   void emitSignal(std::string signalName, int value);
   int getSignalValue(std::string slotName);
-  int getNextAVID(); //TODO
-  void createParamOrUpdateOnServer(const std::string& paramKey, int newParamValue); //TODO
-  int tryToGetParamFromServer(const std::string& paramKey); //TODO
+  //int getNextAVID(); MABY useless
+
+
 };
 
 class ClockDistributer{

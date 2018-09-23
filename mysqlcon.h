@@ -3,6 +3,7 @@
 #include <string>
 #include <stdlib.h>
 #include <mysql/mysql.h>
+#include <mutex>
 namespace mSQL{
 
 
@@ -12,6 +13,7 @@ public:
 	mysqlcon(std::string host, unsigned int port, std::string user,
 		std::string pw, std::string db
 	);
+	std::mutex _mutex;
 	~mysqlcon();
 	bool connect();
 	void disconnect();

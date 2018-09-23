@@ -3,9 +3,11 @@
 #include "IoD/COMprotocol.h"
 #include <iostream>
 #include "REST/REST.h"
+#include "ModuleFramework/module.h"
+#include "mysqlcon.h"
 
-//DB::Database globalDB;
 IoD::IoD globalIoD(true,"/dev/ttyACM0",57600,"localhost",3306,"IoD","637013","heating");
+mSQL::mysqlcon globalSQLCon;
 
 int mainModule(int argc, char* argv[]){
     std::thread t(REST::restMain);//start REST ASYNC

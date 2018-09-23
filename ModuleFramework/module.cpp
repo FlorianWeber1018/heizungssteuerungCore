@@ -3,7 +3,7 @@
 //#include "paramRouter.h"
 #include "timer.h"
 extern Module::ClockDistributer globalClock;
-
+extern mSQL::mysqlcon globalSQLCon;
 
 
     // ____Module___________________________________________________________________
@@ -148,6 +148,7 @@ Slot *Module::getSlot(std::string slotName) {
 void Module::changeParam(const std::string& paramKey, int newParamValue)
 {
     m_params[paramKey] = newParamValue;
+    //PERSIST TO SERVER!!!!
 }
 
 Module::~Module() {
@@ -167,8 +168,16 @@ Module::~Module() {
     }
   }
 }
+
 Module::Module() {
   std::cout << "NEW Module" << std::endl;
+}
+int* Module::createParam(const std::string& paramKey, int defaultValue)
+{
+  getParamFromServerIfExists(paramKey, defaultValue);
+  createParamOrUpdateOnServer(paramKey, defaultValue);
+  m_params[paramKey] = defaultValue;
+  return m_params[paramKey]&;
 }
 // ____ClockDistributer_________________________________________________________
 void ClockDistributer::trigger() {
@@ -198,6 +207,7 @@ Module_constant::Module_constant(unsigned int ID){
     if (this->ID == 0) {
         this->ID = getNextAVID();
     }
+    createParam()
     m_params["constSig"] = 0;   //default value
     tryToGetParamFromServer("constSig"); //try to update local value with persistent Value from server(will only be done if the param exists there)
     createParamOrUpdateOnServer("constSig", m_params["constSig"]);  //MABY THE BLOCK ABOVE IN AN SEPERATE FUNCTION IN MODULE Class ?????? .. for bigger Modules....
@@ -497,4 +507,3 @@ void Module_Woodstove::process() {
 // _____________________________________________________________________________
 
 }//namespace
-

@@ -2,6 +2,7 @@
 #include <string>
 #include <iostream>
 #include <mysql/mysql.h>
+#include <mutex>
 namespace mSQL{
 mysqlcon::mysqlcon(std::string host, unsigned int port, std::string user, std::string pw, std::string db)
 {
@@ -57,6 +58,8 @@ MYSQL_RES* mysqlcon::sendCommand(std::string sendstring, MYSQL* connectionObject
 }
 MYSQL_RES* mysqlcon::sendCommand(std::string sendstring)
 {
+	_mutex.lock();
+	std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
 	if(connected){
         return sendCommand(sendstring, m_mysql);
 	}
