@@ -3,6 +3,7 @@
 #include <iostream>
 #include <mysql/mysql.h>
 #include <mutex>
+#include <thread>
 namespace mSQL{
 mysqlcon::mysqlcon(std::string host, unsigned int port, std::string user, std::string pw, std::string db)
 {
@@ -13,6 +14,10 @@ mysqlcon::mysqlcon(std::string host, unsigned int port, std::string user, std::s
 	this->db = db;
 	this->connected = false;
 	std::cout << "mysqlcon::mysqlcon" << std::endl;
+    while(connect() == false){
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    std::cout << "mysqlcon::mysqlcon:: sucessfully Connected" << std::endl;
 }
 mysqlcon::~mysqlcon() {
 	disconnect();

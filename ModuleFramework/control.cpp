@@ -1,46 +1,27 @@
 #include "control.h"
-#include "util.h"
-#include "paramRouter.h"
+#include "../util.h"
 
-extern ParamRouter* globalParams;
 
-void config_PID::syncParam(unsigned int ID){
-  mySqlParam tempParamKey; // create Key to Config Param
-  tempParamKey.ID = ID;
-  tempParamKey.paramKey = "kp";
-  this->kp = static_cast<float>(globalParams->getParam(tempParamKey));
-  tempParamKey.paramKey = "up_max";
-  this->up_max = static_cast<float>(globalParams->getParam(tempParamKey));
-  tempParamKey.paramKey = "up_min";
-  this->up_min = static_cast<float>(globalParams->getParam(tempParamKey));
-  tempParamKey.paramKey = "ki";
-  this->ki = static_cast<float>(globalParams->getParam(tempParamKey));
-  tempParamKey.paramKey = "ui_max";
-  this->ui_max = static_cast<float>(globalParams->getParam(tempParamKey));
-  tempParamKey.paramKey = "ui_min";
-  this->ui_min = static_cast<float>(globalParams->getParam(tempParamKey));
-  tempParamKey.paramKey = "kd";
-  this->kd = static_cast<float>(globalParams->getParam(tempParamKey));
-  tempParamKey.paramKey = "ud_max";
-  this->ud_max = static_cast<float>(globalParams->getParam(tempParamKey));
-  tempParamKey.paramKey = "ud_min";
-  this->ud_min = static_cast<float>(globalParams->getParam(tempParamKey));
+void config_PID::syncParam(int kp, int up_max, int up_min, int ki, int ui_max, int ui_min, int kd, int ud_max, int ud_min)
+{
+  this->kp = static_cast<float>(kp);
+  this->up_max = static_cast<float>(up_max);
+  this->up_min = static_cast<float>(up_min);
+  this->ki = static_cast<float>(ki);
+  this->ui_max = static_cast<float>(ui_max);
+  this->ui_min = static_cast<float>(ui_min);
+  this->kd = static_cast<float>(kd);
+  this->ud_max = static_cast<float>(ud_max);
+  this->ud_min = static_cast<float>(ud_min);
 }
-void config_ServoPWM::syncParam(unsigned int ID){
-  mySqlParam tempParamKey; // create Key to Config Param
-  tempParamKey.ID = ID;
-  tempParamKey.paramKey = "input_max";
-  this->input_max = globalParams->getParam(tempParamKey);
-  tempParamKey.paramKey = "input_min";
-  this->input_min = globalParams->getParam(tempParamKey);
-  tempParamKey.paramKey = "incPWM_max";
-  this->incPWM_max = static_cast<float>(globalParams->getParam(tempParamKey));
-  tempParamKey.paramKey = "incPWM_min";
-  this->incPWM_min = static_cast<float>(globalParams->getParam(tempParamKey));
-  tempParamKey.paramKey = "decPWM_max";
-  this->decPWM_max = static_cast<float>(globalParams->getParam(tempParamKey));
-  tempParamKey.paramKey = "decPWM_min";
-  this->decPWM_min = static_cast<float>(globalParams->getParam(tempParamKey));
+void config_ServoPWM::syncParam(int input_max, int input_min, int incPWM_max, int incPWM_min, int decPWM_max, int decPWM_min)
+{
+  this->input_max = input_max;
+  this->input_min = input_min;
+  this->incPWM_max = static_cast<float>(incPWM_max);
+  this->incPWM_min = static_cast<float>(incPWM_min);
+  this->decPWM_max = static_cast<float>(decPWM_max);
+  this->decPWM_min = static_cast<float>(decPWM_min);
 }
 float PID::getOutput(float x, float w)
 {

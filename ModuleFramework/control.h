@@ -1,20 +1,13 @@
 #ifndef control__h
 #define control__h
+
 #include <climits>
-template <class T>
-auto findMedian(T in){
-  int size = in.size();
-  std::sort (in.begin(), in.end());
-  if(size % 2){   //odd
-    return in[ ( size - 1 ) / 2 ];
-  }else{          //even
-    return ( in[ size / 2 ] + in[ ( size / 2 ) - 1 ] ) / 2;
-  }
-}
+#include "../util.h"
+
 
 struct config_PID
 {
-  void syncParam(unsigned int ID);
+  void syncParam(int kp, int up_max, int up_min, int ki, int ui_max, int ui_min, int kd, int ud_max, int ud_min);
   float kp        = 3000;
     float up_max  = INT_MAX;
     float up_min  = INT_MIN;
@@ -43,7 +36,7 @@ private:
 
 struct config_ServoPWM
 {
-  void syncParam(unsigned int ID);
+  void syncParam(int input_max, int input_min, int incPWM_max, int incPWM_min, int decPWM_max, int decPWM_min);
   int input_max  = 30000;
   int input_min  = -30000;
   float incPWM_max = 150;

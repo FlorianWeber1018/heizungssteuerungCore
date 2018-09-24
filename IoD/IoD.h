@@ -115,18 +115,13 @@ class IoD : protected serialCmdInterface{
 public:
     IoD(bool cyclicSend,
         const std::string& device,
-        unsigned int baudrate,
-        const std::string& host,
-		unsigned int port,
-        const std::string& user,
-        const std::string& pw,
-        const std::string& db);
+        unsigned int baudrate);
     ~IoD();
     unsigned long getRecCount();
     unsigned long getSendCount();
     unsigned long getFlushCount();
     unsigned long getClockCount();
-    void getDataFromSqlServer(mSQL::mysqlcon* sqlCon);
+    void getDataFromSqlServer();
     void readInputs(bool readUnusedToo);
     void writeOutputs(bool writeAll, bool writeUnusedToo);
     void writeConfig(bool writeAll, bool writeUnusedToo);
@@ -135,6 +130,8 @@ public:
     void mainloop();
     void test();
     void getAllSignals(std::map<std::string, int>& outMap);
+    void getAllConfigs(std::map<std::string, int>& outMap);
+
     Module::Signal* getSignal(std::string SignalName);
     Module::Slot* getSlot(std::string SignalName);
 protected:

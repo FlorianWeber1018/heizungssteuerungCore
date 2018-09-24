@@ -9,6 +9,7 @@
 #include <mysql/mysql.h>
 #include "COMprotocol.h"
 #include <functional>
+extern mSQL::mysqlcon globalSQLCon;
 
 namespace IoD{
 unsigned int Pin::get_number()
@@ -208,7 +209,7 @@ bool serialCmdInterface::connect()
 	port.open(_device);
 
 	if(port.is_open()){
-		port.set_option(asio_serial::baud_rate(baudrate));
+        port.set_option( asio_serial::baud_rate(baudrate));
 		port.set_option( asio_serial::flow_control( asio_serial::flow_control::none ) );
 		port.set_option( asio_serial::parity( asio_serial::parity::none ) );
 		port.set_option( asio_serial::stop_bits( asio_serial::stop_bits::one ) );
@@ -434,20 +435,10 @@ const void serialCmdInterface::plotFlushStringToConsole(const std::string& flush
 
 IoD::IoD(bool cyclicSend,
          const std::string& device,
-         unsigned int baudrate,
-         const std::string& host,
-         unsigned int port,
-         const std::string& user,
-         const std::string& pw,
-         const std::string& db) : serialCmdInterface(device, baudrate)
+         unsigned int baudrate) : serialCmdInterface(device, baudrate)
 {
-    mSQL::mysqlcon* sqlCon = new mSQL::mysqlcon( host, port, user, pw, db );
-	while(sqlCon->connect() == false){
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	}
-    getDataFromSqlServer(sqlCon);
-    delete sqlCon;
-    sqlCon = nullptr;
+    getDataFromSqlServer();
+
     serialCmdInterface::connect();
     serialCmdInterface::run();
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -499,10 +490,10 @@ unsigned long IoD::getClockCount()
 {
     return clockCount;
 }
-void IoD::getDataFromSqlServer(mSQL::mysqlcon* sqlCon)
+void IoD::getDataFromSqlServer()
 {
     std::string query = "SELECT portType, number, config, value FROM IoDPins";// ORDER BY portType, number;";
-    MYSQL_RES *result = sqlCon->sendCommand(query);
+    MYSQL_RES *result = globalSQLCon.sendCommand(query);
 
     MYSQL_ROW row;
     if (result != nullptr) {
@@ -722,5 +713,9 @@ void IoD::getAllSignals(std::map<std::string, int>& outMap)
         signalName += std::to_string(element.first);
         outMap[signalName] = element.second.get_value();
     }
+}
+void IoD::getAllConfigs(std::map<std::string, int>& outMap)
+{
+    //for(auto&& element : ioMapOutput)
 }
 }

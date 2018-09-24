@@ -17,48 +17,7 @@
 
 
 namespace Module{
-/*struct mySqlSignal{
-  std::string DeviceID;
-  std::string PortType;
-  std::string Port;
-  std::string Pin;
-  bool operator==(const mySqlSignal& otherSig) const
-  {
-    return (
-      this->DeviceID  ==  otherSig.DeviceID   &&
-      this->PortType  ==  otherSig.PortType   &&
-      this->Port      ==  otherSig.Port       &&
-      this->Pin       ==  otherSig.Pin
-    );
-  }
-  bool operator < ( const mySqlSignal& otherSig ) const
-  {
-    return(
-      ( this->DeviceID <  otherSig.DeviceID )  ||
-      ( this->DeviceID == otherSig.DeviceID && this->PortType <  otherSig.PortType ) ||
-      ( this->DeviceID == otherSig.DeviceID && this->PortType == otherSig.PortType && this->Port <  otherSig.Port ) ||
-      ( this->DeviceID == otherSig.DeviceID && this->PortType == otherSig.PortType && this->Port == otherSig.Port && this->Pin <  otherSig.Pin )
-    );
-  }
-};
-struct mySqlParam{
-  unsigned int ID;
-  std::string paramKey;
-  bool operator == (const mySqlParam& otherParam) const
-  {
-    return(
-      this->ID        ==    otherParam.ID   &&
-      this->paramKey  ==    otherParam.paramKey
-    );
-  }
-  bool operator < (const mySqlParam& otherParam) const
-  {
-    return(
-      (this->ID <   otherParam.ID)    ||
-      (this->ID ==  otherParam.ID   &&  this->paramKey  <  otherParam.paramKey)
-    );
-  }
-};*/
+
 
 struct Slot
 {
@@ -81,6 +40,7 @@ class Module
 public:
   Signal* getSignal(std::string signalName);
   Slot* getSlot(std::string slotName);
+  std::string getModuleType();
   void addPostModule(Module* postModule);
   void trigger();
   void changeParam(const std::string& paramKey, int newParamValue);
@@ -89,24 +49,29 @@ public:
   Module();
   unsigned int ID = 0;
 private:
-  void getParamFromServerIfExists(const std::string& paramKey, int& outParam); //TODO
-  void createParamOrUpdateOnServer(const std::string& paramKey, const int& newParamValue); //TODO
+  void getParamFromServerIfExists(const std::string& paramKey, int& outParam);
+  void createParamOrUpdateOnServer(const std::string& paramKey, const int& newParamValue);
+
 protected:
+  std::string ModuleType;
   std::vector<Module*> m_postModules;
   std::map<std::string, Signal*> m_signals;
   std::map<std::string, Slot*> m_slots;
   std::map<std::string, int> m_params;
   Signal* createSignal(std::string signalName);
   Slot* createSlot(std::string slotName);
-  int* createParam(std::string paramKey, int defaultValue); // TO TEST
+  int* createParam(const std::string& paramKey, int defaultValue); // TO TEST
   void triggerNext();
   virtual void process();
   void emitSignal(std::string signalName, int value);
   int getSignalValue(std::string slotName);
-  //int getNextAVID(); MABY useless
-
-
+  int getParamValue(const std::string& paramKey);
 };
+
+class ConnectionHelper{
+    void connect(Module* sender, Signal* _Signal, Module* receiver, Slot* _Slot) const;
+};
+
 
 class ClockDistributer{
   public:

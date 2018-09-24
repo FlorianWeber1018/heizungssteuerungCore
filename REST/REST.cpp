@@ -7,7 +7,18 @@ namespace REST{
     void restMain()
     {
         crow::SimpleApp app;
-        CROW_ROUTE(app, "/HardwareModule")
+        CROW_ROUTE(app, "/HardwareModule/Values")
+        ([]{
+            crow::json::wvalue outValue;
+            std::map<std::string, int> hardwareIoMap;
+            globalIoD.getAllSignals(hardwareIoMap);
+            for(auto&& element : hardwareIoMap){
+                outValue[element.first] = element.second;
+            }
+
+            return outValue;
+        });
+        CROW_ROUTE(app, "/HardwareModule/Config")
         ([]{
             crow::json::wvalue outValue;
             std::map<std::string, int> hardwareIoMap;
