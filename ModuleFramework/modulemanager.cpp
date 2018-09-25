@@ -1,6 +1,7 @@
 #include "modulemanager.h"
 #include "module.h"
 #include "../mysqlcon.h"
+#include "../util.h"
 
 extern mSQL::mysqlcon globalSQLCon;
 
@@ -20,8 +21,17 @@ void ModuleManager::addModule(const unsigned int ID, Module* newModule)
 }
 void ModuleManager::deleteModule(const unsigned int ID)
 {
-    deleteModuleOnServer(ID);
-    m_modules.erase(ID);
+    Module** tempModule = nullptr;
+    bool moduleExist = util::searchInMap(m_modules, ID, tempModule);
+    if(moduleExist){
+        if(*tempModule != nullptr){
+            delete *tempModule;
+            deleteParamsOfModuleOnServer(ID);
+            deleteConnectionsOfModuleOnServer(ID);
+            deleteModuleOnServer(ID);
+            m_modules.erase(ID);
+        }
+    }
 }
 const std::map<unsigned int, Module*>& ModuleManager::getAllModules()
 {
@@ -42,6 +52,7 @@ void ModuleManager::createModuleOnServer(const std::string& newModuleType, unsig
         mysql_free_result(result);
     }
 }
+
 void ModuleManager::deleteModuleOnServer(unsigned int ID)
 {
     std::string query = "DELETE FROM ModuleList WHERE ID = ";
@@ -53,6 +64,12 @@ void ModuleManager::deleteModuleOnServer(unsigned int ID)
     if (result != nullptr) {
         mysql_free_result(result);
     }
+}
+void ModuleManager::createModule(const std::string& newModuleType)
+{
+    unsigned int newID = getBiggestIdFromTable("ModuleList");
+    newID++;
+    createModule(newModuleType, newID);
 }
 void ModuleManager::createModule(const std::string& newModuleType, unsigned int newID)
 {
@@ -71,6 +88,7 @@ void ModuleManager::createModule(const std::string& newModuleType, unsigned int 
     }else if(newModuleType == "woodstove"){
         addModule(newID, new Module_Woodstove(newID));
     }
+    createModuleOnServer(newModuleType, newID);
 }
 
 void ModuleManager::getModulesFromServer(std::map<unsigned int, std::string>& outMap)
@@ -87,8 +105,41 @@ void ModuleManager::getModulesFromServer(std::map<unsigned int, std::string>& ou
         mysql_free_result(result);
     }
 }
+unsigned int ModuleManager::getBiggestIdFromTable (const std::string& TableName)
+{
+    std::string query = "SELECT MAX(ID) FROM ";
+    query += TableName;
+    query += ";";
 
+    unsigned int resultID = 0;
 
+    MYSQL_RES *result = globalSQLCon.sendCommand(query);
+
+    MYSQL_ROW row;
+    if (result != nullptr) {
+        if (row = mysql_fetch_row(result)) {
+            resultID = std::stol(row[0]);
+        }
+        mysql_free_result(result);
+    }
+    return resultID;
+}
+void ModuleManager::deleteConnectionsOfModuleOnServer(const unsigned int ID)
+{
+    //TO IMPLEMENT DATASTRUCTURE NOT PRESENT YET
+}
+void ModuleManager::deleteParamsOfModuleOnServer(const unsigned int ID)
+{
+    std::string query = "DELETE FROM ModuleConfig WHERE ModuleID = ";
+    query.append(std::to_string(ID));
+    query.append(";");
+
+    MYSQL_RES *result = globalSQLCon.sendCommand(query);
+
+    if (result != nullptr) {
+        mysql_free_result(result);
+    }
+}
 
 
 
