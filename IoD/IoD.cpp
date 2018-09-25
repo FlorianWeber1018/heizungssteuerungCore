@@ -9,6 +9,7 @@
 #include <mysql/mysql.h>
 #include "COMprotocol.h"
 #include <functional>
+#include "../util.h"
 extern mSQL::mysqlcon globalSQLCon;
 
 namespace IoD{
@@ -92,6 +93,12 @@ void Pin::set_config(uint8_t _config)
     std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
     config=_config;
 }
+void Pin::change_config(uint8_t _config)
+{
+    set_config(_config);
+    set_configSynced(false);
+}
+
 
 
 IoPin::IoPin(unsigned int number = 0, unsigned char value = 0, IoConfig config = IoConfig::nInvInput)
@@ -434,6 +441,7 @@ const void serialCmdInterface::plotFlushStringToConsole(const std::string& flush
 
 
 IoD::IoD(bool cyclicSend,
+         unsigned int milliseconds,
          const std::string& device,
          unsigned int baudrate) : serialCmdInterface(device, baudrate)
 {
@@ -446,7 +454,7 @@ IoD::IoD(bool cyclicSend,
     initMCU();
 
     if(cyclicSend){
-        initClock();
+        initClock(milliseconds);
     }
 
 
@@ -459,10 +467,10 @@ void IoD::initMCU()
     }
     cyclicSync();
 }
-void IoD::initClock()
+void IoD::initClock(unsigned int milliseconds)
 {
     std::this_thread::sleep_for(std::chrono::seconds(2));
-    m_clock = new Clock::Clock(std::chrono::milliseconds(500), std::bind(&IoD::cyclicSync,this) );
+    m_clock = new Clock::Clock(std::chrono::milliseconds(milliseconds), std::bind(&IoD::cyclicSync,this) );
     std::thread t(&Clock::Clock::run, m_clock);//start clock async
     t.detach();
 }
@@ -522,7 +530,26 @@ void IoD::getDataFromSqlServer()
         mysql_free_result(result);
       }
 }
+void IoD::changeConfigOnSqlServer(char portType, int number, uint8_t newConfig)
+{
+    std::string query = "UPDATE IoDPins SET config = ";
+    query.append(std::to_string(newConfig));
+    query.append(" WHERE portType = '");
+    query += portType;
+    query.append("' AND number = ");
+    query.append(std::to_string(number));
+    query.append(" ;");
+
+    MYSQL_RES *result = globalSQLCon.sendCommand(query);
+
+    if (result != nullptr) {
+        mysql_free_result(result);
+    }
+}
 void IoD::readInputs(bool readUnusedToo){
+
+    _mutex.lock();
+    std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
 
     for(auto&& element : adcMap){
         if( element.second.get_inUse() || readUnusedToo ){
@@ -542,6 +569,10 @@ void IoD::readInputs(bool readUnusedToo){
     }
 }
 void IoD::writeOutputs(bool writeAll, bool writeUnusedToo){
+
+    _mutex.lock();
+    std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
+
     for ( auto&& element : ioMapOutput ){
         if( ( element.second.get_inUse() || writeUnusedToo ) && ( !element.second.get_valueSynced() || writeAll ) ){
             std::string flushStr = "0";
@@ -552,6 +583,10 @@ void IoD::writeOutputs(bool writeAll, bool writeUnusedToo){
     }
 }
 void IoD::writeConfig(bool writeAll, bool writeUnusedToo){
+
+    _mutex.lock();
+    std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
+
     for ( auto&& element : ioMapInput ){
         if( ( element.second.get_inUse() || writeUnusedToo ) && ( !element.second.get_configSynced() || writeAll ) ){
             std::string flushStr = "0";
@@ -585,6 +620,7 @@ void IoD::resetMCU()
 }
 void IoD::cyclicSync()
 {
+
 
     writeConfig(true, true);
     readInputs(true);
@@ -663,6 +699,9 @@ void IoD::serialDispatcher(std::string cmd)
 }
 bool IoD::allInputValuesSynced()
 {
+    _mutex.lock();
+    std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
+
     bool result = true;
     for(auto&& element : ioMapInput){
         result &= element.second.get_valueSynced();
@@ -674,6 +713,9 @@ bool IoD::allInputValuesSynced()
 }
 bool IoD::allOutputValuesSynced()
 {
+    _mutex.lock();
+    std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
+
     bool result = true;
     for(auto&& element : ioMapOutput){
         result &= element.second.get_valueSynced();
@@ -696,26 +738,112 @@ void IoD::test()
     writeOutputs(true, true);*/
 
 }
-void IoD::getAllSignals(std::map<std::string, int>& outMap)
+
+void IoD::changeConfig(char portType, int number, uint8_t newConfig)
 {
-    for(auto&& element : adcMap){
-        std::string signalName = "ADC_";
-        signalName += std::to_string(element.first);
-        outMap[signalName] = element.second.get_value();
+    _mutex.lock();
+    std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
+
+
+    AdcPin* _adc_p = nullptr;
+    IoPin* _io_p = nullptr;
+    bool found = false;
+    char oldMap;
+    if(portType == 'A' || portType == 'a'){
+        found = util::searchInMap(adcMap, number, _adc_p );
+        oldMap = 'A';
+    }else if(portType == 'I' || portType == 'i'){
+        if(!found){
+            found = util::searchInMap(ioMapInput, number, _io_p );
+            oldMap = 'I';
+            if(!found){
+                found = util::searchInMap(ioMapOutput, number, _io_p );
+                oldMap = 'O';
+            }
+        }
     }
-    for(auto&& element : ioMapInput){
-        std::string signalName = "IN_";
-        signalName += std::to_string(element.first);
-        outMap[signalName] = element.second.get_value();
-    }
-    for(auto&& element : ioMapOutput){
-        std::string signalName = "OUT_";
-        signalName += std::to_string(element.first);
-        outMap[signalName] = element.second.get_value();
+    if(found){
+
+        if(portType == 'A' || portType == 'a'){//look for sorting maps new
+            _adc_p->change_config(newConfig); ///CHANGE CONFIG IN PIN
+            changeConfigOnSqlServer(portType, number, newConfig);
+            //nothing to sort, a adcpin can not be an output
+        }else if(portType == 'I' || portType == 'i'){
+            _io_p->change_config(newConfig); ///CHANGE CONFIG IN PIN
+            changeConfigOnSqlServer(portType, number, newConfig);
+            char newMap = oldMap; //init useless, only safety
+            if (newConfig == 0 || newConfig == 1 ){
+                if(oldMap == 'O'){//new=input old=output
+                    ioMapInput[number] = ioMapOutput[number];
+                    ioMapOutput.erase(number);
+                }
+            }else if(newConfig == 2 || newConfig == 3 || newConfig == 4 || newConfig == 5 ){
+                if(oldMap == 'I'){//new=output old=input
+                    ioMapOutput[number] = ioMapInput[number];
+                    ioMapInput.erase(number);
+                }
+            }
+        }
     }
 }
-void IoD::getAllConfigs(std::map<std::string, int>& outMap)
+void IoD::getAllSignals(std::map<std::string, int>& outMap, bool io, bool adc, int number)
 {
-    //for(auto&& element : ioMapOutput)
+    _mutex.lock();
+    std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
+    if(adc){
+        for(auto&& element : adcMap){
+            if(number == -1 || number == element.first){
+                std::string signalName = "ADC_";
+                signalName += std::to_string(element.first);
+                outMap[signalName] = element.second.get_value();
+            }
+        }
+    }
+    if(io){
+        for(auto&& element : ioMapInput){
+            if(number == -1 || number == element.first){
+                std::string signalName = "IN_";
+                signalName += std::to_string(element.first);
+                outMap[signalName] = element.second.get_value();
+            }
+        }
+        for(auto&& element : ioMapOutput){
+            if(number == -1 || number == element.first){
+                std::string signalName = "OUT_";
+                signalName += std::to_string(element.first);
+                outMap[signalName] = element.second.get_value();
+            }
+        }
+    }
+}
+void IoD::getAllConfigs(std::map<std::string, int>& outMap, bool io, bool adc, int number)
+{
+    _mutex.lock();
+    std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
+    if(adc){
+        for(auto&& element : adcMap){
+            if(number == -1 || number == element.first){
+                std::string signalName = "ADC_";
+                signalName += std::to_string(element.first);
+                outMap[signalName] = element.second.get_config();
+            }
+        }
+    }
+    if(io){
+        for(auto&& element : ioMapInput){
+            if(number == -1 || number == element.first){
+                std::string signalName = "IN_";
+                signalName += std::to_string(element.first);
+                outMap[signalName] = element.second.get_config();
+            }
+        }
+        for(auto&& element : ioMapOutput){
+            if(number == -1 || number == element.first){
+                std::string signalName = "OUT_";
+                signalName += std::to_string(element.first);
+                outMap[signalName] = element.second.get_config();
+            }
+        }
+    }
 }
 }

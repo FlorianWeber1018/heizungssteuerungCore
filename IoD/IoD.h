@@ -41,7 +41,7 @@ struct Pin{
     void set_configSynced(bool _configSynced);
     void set_value(int16_t _value);
     void set_config(uint8_t _config);
-
+    void change_config(uint8_t _config);
 protected:
     mutable std::mutex _mutex;
     unsigned int number;
@@ -114,14 +114,17 @@ class serialCmdInterface
 class IoD : protected serialCmdInterface{
 public:
     IoD(bool cyclicSend,
+        unsigned int milliseconds,
         const std::string& device,
-        unsigned int baudrate);
+        unsigned int baudrate
+        );
     ~IoD();
     unsigned long getRecCount();
     unsigned long getSendCount();
     unsigned long getFlushCount();
     unsigned long getClockCount();
     void getDataFromSqlServer();
+    void changeConfigOnSqlServer(char portType, int number, uint8_t newConfig);
     void readInputs(bool readUnusedToo);
     void writeOutputs(bool writeAll, bool writeUnusedToo);
     void writeConfig(bool writeAll, bool writeUnusedToo);
@@ -129,14 +132,16 @@ public:
     void cyclicSync();
     void mainloop();
     void test();
-    void getAllSignals(std::map<std::string, int>& outMap);
-    void getAllConfigs(std::map<std::string, int>& outMap);
-
+    ////// REST interface
+    void getAllSignals(std::map<std::string, int>& outMap, bool io, bool adc, int number = -1); //number == -1 --> all configs returned
+    void getAllConfigs(std::map<std::string, int>& outMap, bool io, bool adc, int number = -1); //number == -1 --> all configs returned
+    void changeConfig(char portType, int number, uint8_t newConfig); //SERVER persistance not yet implemented!!!!!!
+    //////
     Module::Signal* getSignal(std::string SignalName);
     Module::Slot* getSlot(std::string SignalName);
 protected:
     void initMCU();
-    void initClock();
+    void initClock(unsigned int milliseconds);
     bool mcuResetDone=false;
     unsigned long clockCount = 0;
     Clock::Clock* m_clock = nullptr;
@@ -146,6 +151,7 @@ protected:
     std::map<int,IoPin> ioMapInput;
     std::map<int,IoPin> ioMapOutput;
     std::map<int,AdcPin> adcMap;
+    mutable std::mutex _mutex;
 };
 }
 

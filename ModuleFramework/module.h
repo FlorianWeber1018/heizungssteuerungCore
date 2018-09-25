@@ -18,10 +18,13 @@
 
 namespace Module{
 
-
+struct Signal; //forward declariation
 struct Slot
 {
-  int* value;
+  void connectToSignal(Signal* _signal);
+  void breakConnectionToSignal();
+  int* value = nullptr;
+  Signal* m_signal = nullptr;
   int min = INT_MIN;
   int max = INT_MAX;
   bool synced = false;
@@ -29,7 +32,10 @@ struct Slot
 
 struct Signal
 {
-  int value;
+  void connectToSlot(Slot* _slot);
+  void breakConnectionToSlot(Slot* _slot);
+  void breakConnectionsToAllSlots();
+  int value = 0;
   int min = INT_MIN;
   int max = INT_MAX;
   std::vector<Slot*> m_slots;
@@ -69,7 +75,7 @@ protected:
 };
 
 class ConnectionHelper{
-    void connect(Module* sender, Signal* _Signal, Module* receiver, Slot* _Slot) const;
+    void connect(Signal* _signal, Slot* _slot) const;
 };
 
 

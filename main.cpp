@@ -8,7 +8,7 @@
 #include "mysqlcon.h"
 
 mSQL::mysqlcon globalSQLCon("localhost",3306,"IoD","637013","heating");
-IoD::IoD globalIoD(true,"/dev/ttyACM0",57600);
+IoD::IoD globalIoD(true, 2000, "/dev/ttyACM0",57600);
 
 Module::ClockDistributer globalClock;
 Module::ModuleManager globalModuleManager;

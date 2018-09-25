@@ -39,9 +39,9 @@ float PID::getOutput(float x, float w)
   }
 
 
-  moveToBorders(up, config.up_min, config.up_max);
-  moveToBorders(ui, config.ui_min, config.ui_max);
-  moveToBorders(ud, config.ud_min, config.ud_max);
+  util::moveToBorders(up, config.up_min, config.up_max);
+  util::moveToBorders(ui, config.ui_min, config.ui_max);
+  util::moveToBorders(ud, config.ud_min, config.ud_max);
 
   float y = up + ui + ud;
 
@@ -53,7 +53,7 @@ float PID::getOutput(float x, float w)
 void ServoPWM::getOutput(int& PWMinc, int& PWMdec, int input)
 {
 //  std::cout << "servo input = " << input << std::endl;
-  moveToBorders(input, config.input_min, config.input_max);
+  util::moveToBorders(input, config.input_min, config.input_max);
 
   if(input > config.input_max){
     input = config.input_max;
@@ -67,9 +67,9 @@ void ServoPWM::getOutput(int& PWMinc, int& PWMdec, int input)
   float pwminc = inc_m * static_cast<float>(input);
   float pwmdec = dec_m * static_cast<float>(input);
 
-  moveToBorders(
+  util::moveToBorders(
     pwminc, config.incPWM_min, config.incPWM_max, 0.0f, config.incPWM_max);
-  moveToBorders(
+  util::moveToBorders(
     pwmdec, config.decPWM_min, config.decPWM_max, 0.0f, config.decPWM_max);
 
   PWMinc = static_cast<int>(pwminc);

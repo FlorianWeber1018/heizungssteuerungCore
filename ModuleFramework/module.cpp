@@ -2,15 +2,52 @@
 #include <iostream>
 #include "../mysqlcon.h"
 #include "timer.h"
+#include <algorithm>
+#include "../util.h"
 extern Module::ClockDistributer globalClock;
 extern mSQL::mysqlcon globalSQLCon;
 
 
-// ____Module___________________________________________________________________
+
 namespace Module {
+// ____Slot_____________________________________________________________________
+void Slot::connectToSignal(Signal* _signal)
+{
+    this->m_signal = _signal;
+    this->value = &(_signal->value);
+    _signal->m_slots.push_back(this);
+    this->synced = true;
+}
+void Slot::breakConnectionToSignal()
+{
+    this->value = nullptr;
+    this->synced = false;
+    util::eraseSingleElementInVector(m_signal->m_slots, this);
+    m_signal = nullptr;
+}
 
-
-void Module::emitSignal(std::string signalName, int value) {
+// ____Signal___________________________________________________________________
+void Signal::connectToSlot(Slot* _slot)
+{
+    _slot->m_signal = this;
+    _slot->value = &(this->value);
+    this->m_slots.push_back(_slot);
+    _slot->synced = true;
+}
+void Signal::breakConnectionToSlot(Slot* _slot)
+{
+    _slot->breakConnectionToSignal();
+}
+void Signal::breakConnectionsToAllSlots()
+{
+    std::vector tempSlots(this->m_slots); //make copy
+    for(auto&& element : tempSlots){
+        element->breakConnectionToSignal();
+    }
+}
+// ____Module___________________________________________________________________
+void Module::emitSignal(std::string signalName, int value)
+{
   Signal *signal = nullptr;
   try {
     signal = m_signals.at(signalName);
@@ -153,21 +190,17 @@ void Module::changeParam(const std::string& paramKey, int newParamValue)
 
 
 Module::~Module() {
-  if (debugMode) {
-    std::cout << "debug:~Module()" << std::endl;
-  }
-  for (auto &&keyValPair : m_signals) {
-    delete keyValPair.second;
     if (debugMode) {
-      std::cout << "deleted Signal: " << keyValPair.first << std::endl;
+        std::cout << "debug:~Module()" << std::endl;
     }
-  }
-  for (auto &&keyValPair : m_slots) {
-    delete keyValPair.second;
-    if (debugMode) {
-      std::cout << "deleted Slot: " << keyValPair.first << std::endl;
+    for (auto&& keyValPair : m_signals) {
+        keyValPair.second->breakConnectionsToAllSlots();
+        delete keyValPair.second; //delete slot in map
     }
-  }
+    for (auto &&keyValPair : m_slots) {
+        keyValPair.second->breakConnectionToSignal();
+        delete keyValPair.second;
+    }
 }
 
 Module::Module() {
@@ -232,11 +265,9 @@ std::string Module::getModuleType()
 }
 
 // ____ConnectionHelper_________________________________________________________
-void ConnectionHelper::connect(Module* sender, Signal* _Signal, Module* receiver, Slot* _Slot) const
+void ConnectionHelper::connect(Signal* _signal, Slot* _slot) const
 {
-    _Slot->value = &(_Signal->value);
-    _Signal->m_slots.push_back(_Slot);
-    sender->addPostModule(receiver);
+    _slot->connectToSignal(_signal);
 }
 
 // ____ClockDistributer_________________________________________________________
@@ -429,7 +460,7 @@ void Module_MedianFilter::process() {
   while(m_values.size() > NewSize){   //remove elements till the buffer hats the correct size from the config
     m_values.erase(m_values.begin());
   }
-  int value = findMedian(m_values);
+  int value = util::findMedian(m_values);
 
   emitSignal("S", value);
 }

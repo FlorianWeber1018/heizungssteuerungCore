@@ -1,38 +1,18 @@
 #include "REST.h"
 #include "crow_all.h"
 #include "../IoD/IoD.h"
+#include <string>
 
 extern IoD::IoD globalIoD;
+
 namespace REST{
     void restMain()
     {
         crow::SimpleApp app;
-        CROW_ROUTE(app, "/HardwareModule/Values")
-        ([]{
-            crow::json::wvalue outValue;
-            std::map<std::string, int> hardwareIoMap;
-            globalIoD.getAllSignals(hardwareIoMap);
-            for(auto&& element : hardwareIoMap){
-                outValue[element.first] = element.second;
-            }
+        #include "HardwareModule/index.cpp" //include HardwaremoduleHandlers
 
-            return outValue;
-        });
-        CROW_ROUTE(app, "/HardwareModule/Config")
-        ([]{
-            crow::json::wvalue outValue;
-            std::map<std::string, int> hardwareIoMap;
-            globalIoD.getAllSignals(hardwareIoMap);
-            for(auto&& element : hardwareIoMap){
-                outValue[element.first] = element.second;
-            }
-
-            return outValue;
-        });
-
-        app.port(18080)
-                .multithreaded()
-                .run();
+        //app.loglevel(crow::LogLevel::Warning);
+        app.port(18080).multithreaded().run();
     }
 
     /*void convertToJson(crow::json::wvalue& outJson, const std::map<std::string&, int> inputMap)
