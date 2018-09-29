@@ -28,7 +28,10 @@ void Slot::breakConnectionToSignal()
         m_signal = nullptr;
     }
 }
-
+bool Slot::connected()
+{
+   return m_signal == nullptr ? false : true;
+}
 // ____Signal___________________________________________________________________
 void Signal::connectToSlot(Slot* _slot)
 {
@@ -54,8 +57,15 @@ void Signal::emitSignal(int value)
     this->value = value;
     for(auto&& element : m_slots){
         element->synced=true;
-        element->m_module->trigger();
+        if(element->m_module!=nullptr){
+            element->m_module->trigger();
+        }
+
     }
+}
+bool Signal::connected()
+{
+    return m_slots.size() > 0 ? true : false;
 }
 // ____Module___________________________________________________________________
 void Module::emitSignal(std::string signalName, int value)

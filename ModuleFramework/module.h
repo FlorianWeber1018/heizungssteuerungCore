@@ -23,6 +23,7 @@ class Module;   //forward declariation
 
 struct Slot
 {
+  bool connected();
   void connectToSignal(Signal* _signal);
   void breakConnectionToSignal();
   int* value = nullptr;
@@ -35,6 +36,7 @@ struct Slot
 
 struct Signal
 {
+  bool connected();
   void connectToSlot(Slot* _slot);
   void breakConnectionToSlot(Slot* _slot);
   void breakConnectionsToAllSlots();

@@ -214,7 +214,11 @@ void ModuleManager::makeConnection(
         }else{
             //connection: Module->IoD(output)
             if(srcModuleFound){
-                makeConnectionToOutput(globalIoD.getSlot(std::stoi(destSlotName)),*srcModule, srcSignalName);
+                if(destSlotName.length() > 1 && destSlotName.at(0) == 'I' ){
+                    makeConnectionToOutput(globalIoD.getSlot(std::stoi(destSlotName.substr(1))),*srcModule, srcSignalName);
+                    addConnection(destModuleID, destSlotName, srcModuleID, srcSignalName);
+                    createConnectionOrUpdateOnServer(destModuleID, destSlotName, srcModuleID, srcSignalName);
+                }
             }
         }
     }else{
@@ -223,6 +227,8 @@ void ModuleManager::makeConnection(
             if(destModuleFound){
                 if(srcSignalName.length() > 1 && ( srcSignalName.at(0) == 'A' || srcSignalName.at(0) == 'I' ) ){
                     makeConnectionToInput(*destModule, destSlotName, globalIoD.getSignal(srcSignalName.at(0), std::stoi(srcSignalName.substr(1))));
+                    addConnection(destModuleID, destSlotName, srcModuleID, srcSignalName);
+                    createConnectionOrUpdateOnServer(destModuleID, destSlotName, srcModuleID, srcSignalName);
                 }
 
             }
@@ -295,13 +301,25 @@ void ModuleManager::deleteConnectionOnServer(unsigned int destModuleID, std::str
 }
 void ModuleManager::deleteConnection(unsigned int destModuleID, std::string destSlotName) //for rest (public)
 {
-    Module** destModule;
-    bool destModuleFound = util::searchInMap(m_modules, destModuleID, destModule);
-    if(destModuleFound){
-        breakConnection(*destModule, destSlotName);
-        m_connections.erase(std::make_pair(destModuleID, destSlotName));
-        deleteConnectionOnServer(destModuleID, destSlotName);
+    if(destModuleID == 0){
+        if(destSlotName.size()>1 && destSlotName.at(0)== 'I');
+        Slot* _slot = globalIoD.getSlot(std::stoi(destSlotName.substr(1)));
+        if(_slot != nullptr){
+            _slot->breakConnectionToSignal();
+            m_connections.erase(std::make_pair(destModuleID, destSlotName));
+            deleteConnectionOnServer(destModuleID, destSlotName);
+            globalIoD.syncInUse();
+        }
+    }else{
+        Module** destModule;
+        bool destModuleFound = util::searchInMap(m_modules, destModuleID, destModule);
+        if(destModuleFound){
+            breakConnection(*destModule, destSlotName);
+            m_connections.erase(std::make_pair(destModuleID, destSlotName));
+            deleteConnectionOnServer(destModuleID, destSlotName);
+        }
     }
+
 }
 void ModuleManager::breakConnection(Module* _module, std::string slotName)
 {

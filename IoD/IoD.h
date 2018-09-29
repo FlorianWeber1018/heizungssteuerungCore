@@ -58,7 +58,7 @@ struct IoPin : public Pin
 {
     IoPin(unsigned int number, unsigned char value, IoConfig config);
     IoPin& operator =(const IoPin& other);
-
+    void syncInUse(); //determine inUse
     Module::Slot& get_slot();
 
     Module::Slot slot;
@@ -67,6 +67,7 @@ struct AdcPin : public Pin
 {
     AdcPin(unsigned int number, unsigned char value, AdcConfig config);
     AdcPin& operator =(const AdcPin& other);
+    void syncInUse(); //determine inUse
 };
 class serialCmdInterface
 {
@@ -129,7 +130,7 @@ public:
     void getDataFromSqlServer();    //called once in constructor AND CONSTRUCTS THE PINS
 
     void readInputs(bool readUnusedToo);                        //  used in mainloop
-    void writeOutputs(bool writeAll, bool writeUnusedToo);      //
+    void writeOutputs(bool writeUnusedToo);                     //
     void triggerPostModules();                                  //                      trigger all modules from all signals of the input / adc pins
 
     void syncInUse(); // look in all signals/slots and set in use in the pin objekt true / fals eif the signal/slot is connected/not
@@ -142,7 +143,7 @@ public:
     Module::Signal* getSignal(char portType, int pinNumber);
     Module::Slot* getSlot(int pinNumber);
 protected:
-    void writeConfig(bool writeAll, bool writeUnusedToo);
+    void writeConfig(bool writeUnusedToo);
     void changeConfigOnSqlServer(char portType, int number, uint8_t newConfig);
     void resetMCU();
     void cyclicSync();

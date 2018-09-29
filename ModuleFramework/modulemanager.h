@@ -39,7 +39,7 @@ protected:
     void addModule(const unsigned int ID, Module *newModule);   //local
 
     void createConnectionOrUpdateOnServer(
-            unsigned int destModuleID, std::string destSlotName,//TODO!!!!!!!!!!!!!!!!!!!!
+            unsigned int destModuleID, std::string destSlotName,
             unsigned int srcModuleID, std::string srcSignalName);
     unsigned int getBiggestIdFromTable (const std::string& TableName);
     void deleteConnectionsOfModuleOnServer(const unsigned int ID);

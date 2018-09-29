@@ -133,6 +133,14 @@ IoPin& IoPin::operator =(const IoPin& other)
     }
     return *this;
 }
+void IoPin::syncInUse()
+{
+    if(slot.connected() || signal.connected()){
+        this->set_inUse(true);
+    }else{
+        this->set_inUse(false);
+    }
+}
 Module::Slot& IoPin::get_slot(){
     _mutex.lock();
     std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
@@ -159,6 +167,15 @@ AdcPin& AdcPin::operator =(const AdcPin& other)
         signal = other.signal;
     }
     return *this;
+}
+
+void AdcPin::syncInUse()
+{
+    if(signal.connected()){
+        this->set_inUse(true);
+    }else{
+        this->set_inUse(false);
+    }
 }
 
 serialCmdInterface::serialCmdInterface(std::string device, int baudrate) : ioService(), port(ioService)
@@ -577,13 +594,16 @@ void IoD::readInputs(bool readUnusedToo){
         }
     }
 }
-void IoD::writeOutputs(bool writeAll, bool writeUnusedToo){
+void IoD::writeOutputs(bool writeUnusedToo){
 
     _mutex.lock();
     std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
 
     for ( auto&& element : ioMapOutput ){
-        if( ( element.second.get_inUse() || writeUnusedToo ) && ( !element.second.get_valueSynced() || writeAll ) ){
+        if( ( element.second.get_inUse() || writeUnusedToo ) ){
+            if(element.second.get_slot().value != nullptr){
+                element.second.set_targetValue(*(element.second.get_slot().value));
+            }
             std::string flushStr = "0";
             flushStr[0] = setVI0 + element.second.get_number();
             flushStr += to_flushString(static_cast<uint8_t>(element.second.get_targetValue()));
@@ -591,13 +611,13 @@ void IoD::writeOutputs(bool writeAll, bool writeUnusedToo){
         }
     }
 }
-void IoD::writeConfig(bool writeAll, bool writeUnusedToo){
+void IoD::writeConfig(bool writeUnusedToo){
 
     _mutex.lock();
     std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
 
     for ( auto&& element : ioMapInput ){
-        if( ( element.second.get_inUse() || writeUnusedToo ) && ( !element.second.get_configSynced() || writeAll ) ){
+        if(  element.second.get_inUse() || writeUnusedToo  ){
             std::string flushStr = "0";
             flushStr[0] = setCI0 + element.second.get_number();
             flushStr += to_flushString(element.second.get_targetConfig());
@@ -605,7 +625,7 @@ void IoD::writeConfig(bool writeAll, bool writeUnusedToo){
         }
     }
     for ( auto&& element : ioMapOutput ){
-        if( ( element.second.get_inUse() || writeUnusedToo ) && ( !element.second.get_configSynced() || writeAll ) ){
+        if(  element.second.get_inUse() || writeUnusedToo  ){
             std::string flushStr = "0";
             flushStr[0] = setCI0 + element.second.get_number();
             flushStr += to_flushString(element.second.get_targetConfig());
@@ -613,7 +633,7 @@ void IoD::writeConfig(bool writeAll, bool writeUnusedToo){
         }
     }
     for ( auto&& element : adcMap ){
-        if( ( element.second.get_inUse() || writeUnusedToo ) && ( !element.second.get_configSynced() || writeAll ) ){
+        if( element.second.get_inUse() || writeUnusedToo ){
             std::string flushStr = "0";
             flushStr[0] = setCA0 + element.second.get_number();
             flushStr += to_flushString(element.second.get_targetConfig());
@@ -631,9 +651,9 @@ void IoD::cyclicSync()
 {
 
 
-    writeConfig(true, true);
+    writeConfig(true);
     readInputs(true);
-    writeOutputs(true, true);
+    writeOutputs(true);
     clockCount++;
 }
 void IoD::serialDispatcher(std::string cmd)
@@ -663,6 +683,7 @@ void IoD::serialDispatcher(std::string cmd)
             number = cmdByte - setVA0;
             pin = &adcMap[number];
             pin->set_value(to_int16_t(payloadStr));
+            pin->get_signal().emitSignal(pin->get_value()); //put value to signal too
         }
     }else if(cmdByte >= setCA0 && cmdByte <= setCA15){
         if(cmd.length() == 3){
@@ -677,6 +698,7 @@ void IoD::serialDispatcher(std::string cmd)
             if(ioMapInput.find(number) != ioMapInput.end()){
                 pin = &ioMapInput[number];
                 pin->set_value(static_cast<int16_t>(value));
+                pin->get_signal().emitSignal(pin->get_value()); //put value to signal too
             }else if(ioMapOutput.find(number) != ioMapOutput.end()){
                 pin = &ioMapOutput[number];
                 pin->set_value(static_cast<int16_t>(value));
@@ -888,6 +910,18 @@ void IoD::triggerPostModules()
             int16_t value = element.second.get_value();// get value from pin
             element.second.signal.emitSignal(value);    //emit signal from pin
         }
+    }
+}
+void IoD::syncInUse()
+{
+    for(auto& element : ioMapInput){
+        element.second.syncInUse();
+    }
+    for(auto& element : ioMapOutput){
+        element.second.syncInUse();
+    }
+    for(auto& element : adcMap){
+        element.second.syncInUse();
     }
 }
 
