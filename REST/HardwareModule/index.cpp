@@ -3,7 +3,7 @@ CROW_ROUTE(app, "/HardwareModule")
     crow::json::wvalue outValue;
 
     std::map<std::string, int> hardwareValueMap;
-    globalIoD.getAllSignals(hardwareValueMap, true, true);
+    globalIoD.getValues(hardwareValueMap, true, true);
 
     for(auto&& element : hardwareValueMap){
         std::string key = element.first;
@@ -12,7 +12,7 @@ CROW_ROUTE(app, "/HardwareModule")
     }
 
     std::map<std::string, int> hardwareConfigMap;
-    globalIoD.getAllConfigs(hardwareConfigMap, true, true);
+    globalIoD.getConfigs(hardwareConfigMap, true, true);
 
     for(auto&& element : hardwareConfigMap){
         std::string key = element.first;

@@ -4,13 +4,21 @@
 #include "../IoD/IoD.h"
 #include "../ModuleFramework/modulemanager.h"
 #include "../ModuleFramework/module.h"
+#include <vector>
+#include <map>
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+
+namespace pt = boost::property_tree;
 
 extern IoD::IoD globalIoD;
 extern Module::ModuleManager globalModuleManager;
+
 namespace REST{
     void restMain()
     {
+
         crow::SimpleApp app;
         #include "HardwareModule/index.cpp" //include HardwaremoduleHandlers
         #include "ModuleManager/index.cpp"  //include ModulemanagerHandlers

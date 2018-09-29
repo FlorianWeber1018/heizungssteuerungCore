@@ -8,6 +8,6 @@ target_link_libraries(${PROJECT_NAME} "boost_system" "pthread" "mysqlclient")
 
 
 
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
 
 

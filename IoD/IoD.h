@@ -33,31 +33,33 @@ struct Pin{
     bool get_configSynced();
     int16_t get_value();
     uint8_t get_config();
-    const Module::Signal& get_signal();
+    int16_t get_targetValue();
+    uint8_t get_targetConfig();
+    Module::Signal& get_signal();
     //setter
     void set_number(unsigned int _number);
     void set_inUse(bool _inUse);
-    void set_valueSynced(bool _valueSynced);
-    void set_configSynced(bool _configSynced);
-    void set_value(int16_t _value);
-    void set_config(uint8_t _config);
-    void change_config(uint8_t _config);
+    void set_targetValue(int16_t _targetValue);     //only for changing from outside
+    void set_targetConfig(uint8_t _targetConfig);   //
+    void set_value(int16_t _value);     //only for dispatcher
+    void set_config(uint8_t _config);   //
+    Module::Signal signal;
 protected:
+
     mutable std::mutex _mutex;
     unsigned int number;
     bool inUse = false;
-    bool valueSynced = false;
-    bool configSynced = false;
+    int16_t targetValue = 0;
+    uint8_t targetConfig = 0;
     int16_t value = 0;
     uint8_t config = 0;
-    Module::Signal signal;
-
 };
 struct IoPin : public Pin
 {
     IoPin(unsigned int number, unsigned char value, IoConfig config);
     IoPin& operator =(const IoPin& other);
 
+    Module::Slot& get_slot();
 
     Module::Slot slot;
 };
@@ -80,9 +82,9 @@ class serialCmdInterface
 		//debug Function
 		const void plotFlushStringToConsole(const std::string& flushString);
 	protected:
-        unsigned long recCount = 0;
-        unsigned long sendCount = 0;
-        unsigned long flushCount = 0;
+        unsigned long recCount = 0;     // only for debug information
+        unsigned long sendCount = 0;    //
+        unsigned long flushCount = 0;   //
 		void startListening();
 		void startSending();
 		void stopSending();
@@ -119,31 +121,35 @@ public:
         unsigned int baudrate
         );
     ~IoD();
-    unsigned long getRecCount();
-    unsigned long getSendCount();
-    unsigned long getFlushCount();
-    unsigned long getClockCount();
-    void getDataFromSqlServer();
-    void changeConfigOnSqlServer(char portType, int number, uint8_t newConfig);
-    void readInputs(bool readUnusedToo);
-    void writeOutputs(bool writeAll, bool writeUnusedToo);
-    void writeConfig(bool writeAll, bool writeUnusedToo);
-    void resetMCU();
-    void cyclicSync();
-    void mainloop();
+    unsigned long getRecCount();        // only for debug information
+    unsigned long getSendCount();       //
+    unsigned long getFlushCount();      //
+    unsigned long getClockCount();      //
+
+    void getDataFromSqlServer();    //called once in constructor AND CONSTRUCTS THE PINS
+
+    void readInputs(bool readUnusedToo);                        //  used in mainloop
+    void writeOutputs(bool writeAll, bool writeUnusedToo);      //
+    void triggerPostModules();                                  //                      trigger all modules from all signals of the input / adc pins
+
+    void syncInUse(); // look in all signals/slots and set in use in the pin objekt true / fals eif the signal/slot is connected/not
     void test();
     ////// REST interface
-    void getAllSignals(std::map<std::string, int>& outMap, bool io, bool adc, int number = -1); //number == -1 --> all configs returned
-    void getAllConfigs(std::map<std::string, int>& outMap, bool io, bool adc, int number = -1); //number == -1 --> all configs returned
-    void changeConfig(char portType, int number, uint8_t newConfig); //SERVER persistance not yet implemented!!!!!!
+    void getValues(std::map<std::string, int>& outMap, bool io, bool adc, int number = -1); //number == -1 --> all configs returned
+    void getConfigs(std::map<std::string, int>& outMap, bool io, bool adc, int number = -1); //number == -1 --> all configs returned
+    void changeConfig(char portType, int number, uint8_t newConfig);
     //////
-    Module::Signal* getSignal(std::string SignalName);
-    Module::Slot* getSlot(std::string SignalName);
+    Module::Signal* getSignal(char portType, int pinNumber);
+    Module::Slot* getSlot(int pinNumber);
 protected:
+    void writeConfig(bool writeAll, bool writeUnusedToo);
+    void changeConfigOnSqlServer(char portType, int number, uint8_t newConfig);
+    void resetMCU();
+    void cyclicSync();
     void initMCU();
     void initClock(unsigned int milliseconds);
     bool mcuResetDone=false;
-    unsigned long clockCount = 0;
+    unsigned long clockCount = 0;   // only for debug information
     Clock::Clock* m_clock = nullptr;
     void serialDispatcher(std::string cmd) override;
     bool allInputValuesSynced();

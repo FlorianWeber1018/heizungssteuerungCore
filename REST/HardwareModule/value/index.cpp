@@ -2,7 +2,7 @@ CROW_ROUTE(app, "/HardwareModule/value")
 ([]{
     crow::json::wvalue outValue;
     std::map<std::string, int> hardwareIoMap;
-    globalIoD.getAllSignals(hardwareIoMap, true, true);
+    globalIoD.getValues(hardwareIoMap, true, true);
     for(auto&& element : hardwareIoMap){
         outValue[element.first] = element.second;
     }

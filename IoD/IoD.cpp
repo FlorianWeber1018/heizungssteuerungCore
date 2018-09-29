@@ -29,13 +29,13 @@ bool Pin::get_valueSynced()
 {
     _mutex.lock();
     std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
-    return valueSynced;
+    return value == targetValue ? true : false;
 }
 bool Pin::get_configSynced()
 {
     _mutex.lock();
     std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
-    return configSynced;
+    return config == targetConfig ? true : false;
 }
 int16_t Pin::get_value()
 {
@@ -49,7 +49,19 @@ uint8_t Pin::get_config()
     std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
     return config;
 }
-const Module::Signal& Pin::get_signal()
+int16_t Pin::get_targetValue()
+{
+    _mutex.lock();
+    std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
+    return targetValue;
+}
+uint8_t Pin::get_targetConfig()
+{
+    _mutex.lock();
+    std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
+    return targetConfig;
+}
+Module::Signal &Pin::get_signal()
 {
     _mutex.lock();
     std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
@@ -69,18 +81,6 @@ void Pin::set_inUse(bool _inUse)
     std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
     inUse=_inUse;
 }
-void Pin::set_valueSynced(bool _valueSynced)
-{
-    _mutex.lock();
-    std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
-    valueSynced=_valueSynced;
-}
-void Pin::set_configSynced(bool _configSynced)
-{
-    _mutex.lock();
-    std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
-    configSynced=_configSynced;
-}
 void Pin::set_value(int16_t _value)
 {
     _mutex.lock();
@@ -93,19 +93,28 @@ void Pin::set_config(uint8_t _config)
     std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
     config=_config;
 }
-void Pin::change_config(uint8_t _config)
+void Pin::set_targetValue(int16_t _targetValue)
 {
-    set_config(_config);
-    set_configSynced(false);
+    _mutex.lock();
+    std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
+    targetValue=_targetValue;
 }
+void Pin::set_targetConfig(uint8_t _targetConfig)
+{
+    _mutex.lock();
+    std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
+    targetConfig=_targetConfig;
+}
+
+
 
 
 
 IoPin::IoPin(unsigned int number = 0, unsigned char value = 0, IoConfig config = IoConfig::nInvInput)
 {
     this->number = number;
-    this->value = value;
-    this->config = config;
+    this->targetValue = value;
+    this->targetConfig = config;
 }
 IoPin& IoPin::operator =(const IoPin& other)
 {
@@ -115,8 +124,8 @@ IoPin& IoPin::operator =(const IoPin& other)
         std::lock_guard<std::mutex> rhs_lg(other._mutex, std::adopt_lock);
         number = other.number;
         inUse = other.inUse;
-        valueSynced = other.valueSynced;
-        configSynced = other.configSynced;
+        targetValue = other.targetValue;
+        targetConfig = other.targetConfig;
         value = other.value;
         config = other.config;
         signal = other.signal;
@@ -124,11 +133,16 @@ IoPin& IoPin::operator =(const IoPin& other)
     }
     return *this;
 }
+Module::Slot& IoPin::get_slot(){
+    _mutex.lock();
+    std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
+    return slot;
+}
 AdcPin::AdcPin(unsigned int number = 0, unsigned char value = 0, AdcConfig config = AdcConfig::pt2000_11)
 {
     this->number = number;
-    this->value = value;
-    this->config = config;
+    this->targetValue = value;
+    this->targetConfig = config;
 }
 AdcPin& AdcPin::operator =(const AdcPin& other)
 {
@@ -138,8 +152,8 @@ AdcPin& AdcPin::operator =(const AdcPin& other)
         std::lock_guard<std::mutex> rhs_lg(other._mutex, std::adopt_lock);
         number = other.number;
         inUse = other.inUse;
-        valueSynced = other.valueSynced;
-        configSynced = other.configSynced;
+        targetValue = other.targetValue;
+        targetConfig = other.targetConfig;
         value = other.value;
         config = other.config;
         signal = other.signal;
@@ -437,9 +451,6 @@ const void serialCmdInterface::plotFlushStringToConsole(const std::string& flush
 	}
 }
 
-
-
-
 IoD::IoD(bool cyclicSend,
          unsigned int milliseconds,
          const std::string& device,
@@ -553,7 +564,6 @@ void IoD::readInputs(bool readUnusedToo){
 
     for(auto&& element : adcMap){
         if( element.second.get_inUse() || readUnusedToo ){
-            element.second.set_valueSynced(false);
             std::string flushStr = "0";
             flushStr[0] = getVA0 + element.second.get_number();
             serialFlush(flushStr);
@@ -561,7 +571,6 @@ void IoD::readInputs(bool readUnusedToo){
     }
     for(auto&& element : ioMapInput){
         if( element.second.get_inUse() || readUnusedToo ){
-            element.second.set_valueSynced(false);
             std::string flushStr = "0";
             flushStr[0] = getVI0 + element.second.get_number();
             serialFlush(flushStr);
@@ -577,7 +586,7 @@ void IoD::writeOutputs(bool writeAll, bool writeUnusedToo){
         if( ( element.second.get_inUse() || writeUnusedToo ) && ( !element.second.get_valueSynced() || writeAll ) ){
             std::string flushStr = "0";
             flushStr[0] = setVI0 + element.second.get_number();
-            flushStr += to_flushString(static_cast<uint8_t>(element.second.get_value()));
+            flushStr += to_flushString(static_cast<uint8_t>(element.second.get_targetValue()));
             serialFlush(flushStr);
         }
     }
@@ -591,7 +600,7 @@ void IoD::writeConfig(bool writeAll, bool writeUnusedToo){
         if( ( element.second.get_inUse() || writeUnusedToo ) && ( !element.second.get_configSynced() || writeAll ) ){
             std::string flushStr = "0";
             flushStr[0] = setCI0 + element.second.get_number();
-            flushStr += to_flushString(element.second.get_config());
+            flushStr += to_flushString(element.second.get_targetConfig());
             serialFlush(flushStr);
         }
     }
@@ -599,7 +608,7 @@ void IoD::writeConfig(bool writeAll, bool writeUnusedToo){
         if( ( element.second.get_inUse() || writeUnusedToo ) && ( !element.second.get_configSynced() || writeAll ) ){
             std::string flushStr = "0";
             flushStr[0] = setCI0 + element.second.get_number();
-            flushStr += to_flushString(element.second.get_config());
+            flushStr += to_flushString(element.second.get_targetConfig());
             serialFlush(flushStr);
         }
     }
@@ -607,7 +616,7 @@ void IoD::writeConfig(bool writeAll, bool writeUnusedToo){
         if( ( element.second.get_inUse() || writeUnusedToo ) && ( !element.second.get_configSynced() || writeAll ) ){
             std::string flushStr = "0";
             flushStr[0] = setCA0 + element.second.get_number();
-            flushStr += to_flushString(element.second.get_config());
+            flushStr += to_flushString(element.second.get_targetConfig());
             serialFlush(flushStr);
         }
     }
@@ -654,15 +663,12 @@ void IoD::serialDispatcher(std::string cmd)
             number = cmdByte - setVA0;
             pin = &adcMap[number];
             pin->set_value(to_int16_t(payloadStr));
-            pin->set_valueSynced(true);
         }
     }else if(cmdByte >= setCA0 && cmdByte <= setCA15){
         if(cmd.length() == 3){
             number = cmdByte - setCA0;
             pin = &adcMap[number];
-            if(pin->get_config() == to_uint8_t(payloadStr)){
-                pin->set_configSynced(true);
-            }
+            pin->set_config(to_uint8_t(payloadStr));
         }
     }else if(cmdByte >= setVI0 && cmdByte <= setVI39){
         if(cmd.length() == 3){
@@ -671,27 +677,21 @@ void IoD::serialDispatcher(std::string cmd)
             if(ioMapInput.find(number) != ioMapInput.end()){
                 pin = &ioMapInput[number];
                 pin->set_value(static_cast<int16_t>(value));
-                pin->set_valueSynced(true);
             }else if(ioMapOutput.find(number) != ioMapOutput.end()){
                 pin = &ioMapOutput[number];
-                if(pin->get_value() == value){
-                    pin->set_valueSynced(true);
-                }
+                pin->set_value(static_cast<int16_t>(value));
             }
 
         }
     }else if(cmdByte >= setCI0 && cmdByte <= setCI39){
         if(cmd.length() == 3){
             number = cmdByte - setCI0;
-            uint8_t config = to_uint8_t(payloadStr);
             if(ioMapInput.find(number) != ioMapInput.end()){
                 pin = &ioMapInput[number];
             }else if(ioMapOutput.find(number) != ioMapOutput.end()){
                 pin = &ioMapOutput[number];
             }
-            if(pin->get_config() == config){
-                pin->set_configSynced(true);
-            }
+            pin->set_config(to_uint8_t(payloadStr));
         }
     }else if(cmdByte == cmdresetMCU){
         mcuResetDone=true;
@@ -765,11 +765,11 @@ void IoD::changeConfig(char portType, int number, uint8_t newConfig)
     if(found){
 
         if(portType == 'A' || portType == 'a'){//look for sorting maps new
-            _adc_p->change_config(newConfig); ///CHANGE CONFIG IN PIN
+            _adc_p->set_targetConfig(newConfig); ///CHANGE CONFIG IN PIN
             changeConfigOnSqlServer(portType, number, newConfig);
             //nothing to sort, a adcpin can not be an output
         }else if(portType == 'I' || portType == 'i'){
-            _io_p->change_config(newConfig); ///CHANGE CONFIG IN PIN
+            _io_p->set_targetConfig(newConfig); ///CHANGE CONFIG IN PIN
             changeConfigOnSqlServer(portType, number, newConfig);
             char newMap = oldMap; //init useless, only safety
             if (newConfig == 0 || newConfig == 1 ){
@@ -786,7 +786,7 @@ void IoD::changeConfig(char portType, int number, uint8_t newConfig)
         }
     }
 }
-void IoD::getAllSignals(std::map<std::string, int>& outMap, bool io, bool adc, int number)
+void IoD::getValues(std::map<std::string, int>& outMap, bool io, bool adc, int number)
 {
     _mutex.lock();
     std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
@@ -816,7 +816,7 @@ void IoD::getAllSignals(std::map<std::string, int>& outMap, bool io, bool adc, i
         }
     }
 }
-void IoD::getAllConfigs(std::map<std::string, int>& outMap, bool io, bool adc, int number)
+void IoD::getConfigs(std::map<std::string, int>& outMap, bool io, bool adc, int number)
 {
     _mutex.lock();
     std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
@@ -846,4 +846,49 @@ void IoD::getAllConfigs(std::map<std::string, int>& outMap, bool io, bool adc, i
         }
     }
 }
+Module::Signal* IoD::getSignal(char portType, int pinNumber)
+{
+    AdcPin* adcPin_p = nullptr;
+    IoPin* ioPin_p = nullptr;
+    if(portType == 'A' || portType == 'a'){
+        util::searchInMap(adcMap, pinNumber, adcPin_p );
+        if(adcPin_p != nullptr){
+            return &(adcPin_p->get_signal());
+        }
+    }else if(portType == 'I' || portType == 'i'){
+        if(! util::searchInMap(ioMapInput,pinNumber,ioPin_p)){
+            util::searchInMap(ioMapOutput,pinNumber,ioPin_p);
+        }
+        if(ioPin_p != nullptr){
+            return &(ioPin_p->get_signal());
+        }
+    }
+    return nullptr;
+}
+Module::Slot* IoD::getSlot(int pinNumber)
+{
+    IoPin* ioPin_p = nullptr;
+    if( util::searchInMap(ioMapOutput,pinNumber,ioPin_p)){
+        if(ioPin_p != nullptr){
+            return &(ioPin_p->get_slot());
+        }
+    }
+    return nullptr;
+}
+void IoD::triggerPostModules()
+{
+    for(auto& element : ioMapInput){
+        if( ! element.second.signal.m_slots.empty()){
+            int16_t value = element.second.get_value();// get value from pin
+            element.second.signal.emitSignal(value);    //emit signal from pin
+        }
+    }
+    for(auto& element : adcMap){
+        if( ! element.second.signal.m_slots.empty()){
+            int16_t value = element.second.get_value();// get value from pin
+            element.second.signal.emitSignal(value);    //emit signal from pin
+        }
+    }
+}
+
 }

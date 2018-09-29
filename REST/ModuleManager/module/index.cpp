@@ -1,12 +1,36 @@
 CROW_ROUTE(app, "/ModuleManager/module")
 ([]{
-    crow::json::wvalue outValue;
+    pt::ptree tree;
+
     std::map<unsigned int, Module::Module*> moduleMap;
     moduleMap = globalModuleManager.getAllModules();
     for(auto&& element : moduleMap){
-        outValue[std::to_string(element.first)] = element.second->getModuleType();
+        unsigned int moduleID = element.first;
+        std::string moduleType = element.second->getModuleType();
+        std::string keyToModule = std::to_string(moduleID);
+
+        std::string keyToModuleID = keyToModule;
+        keyToModuleID += ".ID";
+        tree.put(keyToModuleID, moduleID);
+
+        std::string keyToModuleType = keyToModule;
+        keyToModuleType += ".Type";
+        tree.put(keyToModuleType, moduleType);
+
+        std::string keyToParams = keyToModule;
+        keyToParams += ".Parameters";
+
+        const std::map<std::string, int>& paramMap = element.second->getAllParams();
+        for(auto&& element : paramMap){
+            std::string keyToParam = keyToParams;
+            keyToParam += ".";
+            keyToParam += element.first;
+            tree.put(keyToParam, element.second);
+        }
     }
-    return outValue;
+    std::stringstream ss;
+    pt::json_parser::write_json(ss, tree);
+    return ss.str();
 });
 CROW_ROUTE(app, "/ModuleManager/module").methods("POST"_method)
 ([](const crow::request& req){
@@ -40,3 +64,4 @@ CROW_ROUTE(app, "/ModuleManager/module").methods("DELETE"_method)
     }
     return crow::response(200);
 });
+#include "parameters/index.cpp"

@@ -2,7 +2,7 @@ CROW_ROUTE(app, "/HardwareModule/config/io")
 ([]{
     crow::json::wvalue outValue;
     std::map<std::string, int> hardwareConfigMap;
-    globalIoD.getAllConfigs(hardwareConfigMap, true, false);
+    globalIoD.getConfigs(hardwareConfigMap, true, false);
     for(auto&& element : hardwareConfigMap){
         outValue[element.first] = element.second;
     }
@@ -12,7 +12,7 @@ CROW_ROUTE(app, "/HardwareModule/config/io/<int>")
 ([](int number){
     crow::json::wvalue outValue;
     std::map<std::string, int> hardwareConfigMap;
-    globalIoD.getAllConfigs(hardwareConfigMap, true, false, number);
+    globalIoD.getConfigs(hardwareConfigMap, true, false, number);
     for(auto&& element : hardwareConfigMap){
         outValue[element.first] = element.second;
     }

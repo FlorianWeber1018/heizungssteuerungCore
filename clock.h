@@ -10,6 +10,7 @@ class Clock
 public:
   Clock(std::chrono::milliseconds T, std::function<void(void)> callback);
   void run();
+  void runAsync();
   void stop();
   void setTimebase(std::chrono::milliseconds T);
 protected:

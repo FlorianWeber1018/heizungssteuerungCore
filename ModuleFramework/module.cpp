@@ -4,7 +4,7 @@
 #include "timer.h"
 #include <algorithm>
 #include "../util.h"
-extern Module::ClockDistributer globalClock;
+extern Module::ClockDistributer globalClockDistributer;
 extern mSQL::mysqlcon globalSQLCon;
 
 
@@ -13,6 +13,7 @@ namespace Module {
 // ____Slot_____________________________________________________________________
 void Slot::connectToSignal(Signal* _signal)
 {
+
     this->m_signal = _signal;
     this->value = &(_signal->value);
     _signal->m_slots.push_back(this);
@@ -20,10 +21,12 @@ void Slot::connectToSignal(Signal* _signal)
 }
 void Slot::breakConnectionToSignal()
 {
-    this->value = nullptr;
-    this->synced = false;
-    util::eraseSingleElementInVector(m_signal->m_slots, this);
-    m_signal = nullptr;
+    if(m_signal != nullptr){
+        this->value = nullptr;
+        this->synced = false;
+        util::eraseSingleElementInVector(m_signal->m_slots, this);
+        m_signal = nullptr;
+    }
 }
 
 // ____Signal___________________________________________________________________
@@ -40,9 +43,18 @@ void Signal::breakConnectionToSlot(Slot* _slot)
 }
 void Signal::breakConnectionsToAllSlots()
 {
-    std::vector tempSlots(this->m_slots); //make copy
+    std::vector<Slot*> tempSlots(this->m_slots); //make copy
     for(auto&& element : tempSlots){
         element->breakConnectionToSignal();
+    }
+}
+void Signal::emitSignal(int value)
+{
+    util::moveToBorders(value, this->min, this->max);
+    this->value = value;
+    for(auto&& element : m_slots){
+        element->synced=true;
+        element->m_module->trigger();
     }
 }
 // ____Module___________________________________________________________________
@@ -58,18 +70,7 @@ void Module::emitSignal(std::string signalName, int value)
     return;
   }
   if (signal != nullptr) {
-    if (value > signal->max) {
-      signal->value = signal->max;
-    } else {
-      if (value < signal->min) {
-        signal->value = signal->min;
-      } else {
-        signal->value = value;
-      }
-    }
-    for (auto&& slot : signal->m_slots) {
-      slot->synced = true;
-    }
+    signal->emitSignal( value );
   }
 }
 
@@ -88,13 +89,7 @@ int Module::getSignalValue(std::string slotName) {
 
   if (slot != nullptr) {
     preRet = *(slot->value);
-    if (preRet > slot->max) {
-      preRet = slot->max;
-    } else {
-      if (preRet < slot->min) {
-        preRet = slot->min;
-      }
-    }
+    util::moveToBorders(preRet, slot->min, slot->max);
   }
   return preRet;
 }
@@ -119,10 +114,18 @@ void Module::trigger() {
 void Module::triggerNext() {
   if (debugMode)
     std::cout << "Module::triggerNext" << std::endl;
-  for (auto postModule : m_postModules) {
-    if (debugMode)
-      std::cout << "1 Module triggered" << std::endl;
-    postModule->trigger();
+  for (auto&& _signal : m_signals) {
+      for(auto&& _slot : _signal.second->m_slots){
+          if(_slot->m_module != nullptr){
+                _slot->m_module->trigger();
+                if (debugMode)
+                    std::cout << "1 Module triggered" << std::endl;
+          }else{
+                if (debugMode)
+                    std::cout << "1 slot in IoD synced" << std::endl;
+          }
+
+      }
   }
 }
 
@@ -149,8 +152,8 @@ Signal *Module::createSignal(std::string signalName) {
 Slot *Module::createSlot(std::string slotName) {
   if (m_slots.count(slotName) == 0) {
     Slot *newSlot = new Slot();
-    m_slots[slotName] = newSlot;
-    newSlot->value = nullptr;
+    m_slots[slotName] = newSlot;  
+    newSlot->m_module = this;
     return newSlot;
   } else {
     return m_slots.at(slotName);
@@ -167,9 +170,7 @@ Signal *Module::getSignal(std::string signalName) {
     return nullptr;
   }
 }
-void Module::addPostModule(Module *postModule) {
-  m_postModules.push_back(postModule);
-}
+
 
 Slot *Module::getSlot(std::string slotName) {
   try {
@@ -182,10 +183,17 @@ Slot *Module::getSlot(std::string slotName) {
   }
 }
 
-void Module::changeParam(const std::string& paramKey, int newParamValue)
+bool Module::changeParam(const std::string& paramKey, int newParamValue)
 {
-    m_params[paramKey] = newParamValue;
-    createParamOrUpdateOnServer(paramKey, newParamValue);
+    int* param;
+
+    if(util::searchInMap(m_params, paramKey, param)){
+        m_params[paramKey] = newParamValue;
+        createParamOrUpdateOnServer(paramKey, newParamValue);
+        return true;
+    }else{
+        return false;
+    }
 }
 
 
@@ -263,7 +271,16 @@ std::string Module::getModuleType()
 {
     return ModuleType;
 }
-
+int Module::getParam(const std::string& paramKey)
+{
+    int* param = nullptr;
+    util::searchInMap(m_params,paramKey,param);
+    return param == nullptr ? 0 : *param;
+}
+const std::map<std::string, int>& Module::getAllParams()
+{
+    return m_params;
+}
 // ____ConnectionHelper_________________________________________________________
 void ConnectionHelper::connect(Signal* _signal, Slot* _slot) const
 {
@@ -293,13 +310,15 @@ void ClockDistributer::rmDestination(Module *destModule) {
 Module_constant::Module_constant(unsigned int ID){
     this->ID = ID;
     this->ModuleType = "constant";
-    globalClock.addDestination(this);
+    globalClockDistributer.addDestination(this);
 
     createSignal("constSig");
 
     createParam("constSig", 0);
 }
-Module_constant::~Module_constant() { globalClock.rmDestination(this); }
+Module_constant::~Module_constant() {
+    globalClockDistributer.rmDestination(this);
+}
 
 void Module_constant::process() {
   emitSignal("constSig", getParamValue("constSig"));

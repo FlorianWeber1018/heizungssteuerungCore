@@ -6,19 +6,22 @@
 #include "ModuleFramework/module.h"
 #include "ModuleFramework/modulemanager.h"
 #include "mysqlcon.h"
+#include "main.h"
+#include <functional>
+#include <thread>
 
 mSQL::mysqlcon globalSQLCon("localhost",3306,"IoD","637013","heating");
 IoD::IoD globalIoD(true, 2000, "/dev/ttyACM0",57600);
 
-Module::ClockDistributer globalClock;
+Module::ClockDistributer globalClockDistributer;
 Module::ModuleManager globalModuleManager;
-
+Clock::Clock globalClock(std::chrono::milliseconds(500), std::bind(&mainloop));
 
 
 int main(int argc, char* argv[]){
     std::thread t(REST::restMain);//start REST ASYNC
     t.detach();
-    std::string input;
+    globalClock.runAsync();
     while(1){
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
@@ -36,3 +39,16 @@ int main(int argc, char* argv[]){
 
   return 0;
 }
+
+void mainloop(){
+    static volatile bool firstRun=true;
+    if(firstRun){
+        firstRun=false; //inputs not yet available
+    }else{
+        globalClockDistributer.trigger();
+        globalIoD.triggerPostModules();
+        globalIoD.writeOutputs(false,false);
+    }
+    globalIoD.readInputs(false);
+}
+

@@ -19,6 +19,11 @@ void Clock::run()
   m_callback();
 }
 
+void Clock::runAsync()
+{
+    this->spawnNewThread();
+}
+
 void Clock::stop(){
   bool run=false;
 }

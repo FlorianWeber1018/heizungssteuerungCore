@@ -18,13 +18,16 @@
 
 namespace Module{
 
-struct Signal; //forward declariation
+struct Signal;  //forward declariation
+class Module;   //forward declariation
+
 struct Slot
 {
   void connectToSignal(Signal* _signal);
   void breakConnectionToSignal();
   int* value = nullptr;
   Signal* m_signal = nullptr;
+  Module* m_module = nullptr;
   int min = INT_MIN;
   int max = INT_MAX;
   bool synced = false;
@@ -35,6 +38,7 @@ struct Signal
   void connectToSlot(Slot* _slot);
   void breakConnectionToSlot(Slot* _slot);
   void breakConnectionsToAllSlots();
+  void emitSignal(int value);
   int value = 0;
   int min = INT_MIN;
   int max = INT_MAX;
@@ -47,10 +51,13 @@ public:
   Signal* getSignal(std::string signalName);
   Slot* getSlot(std::string slotName);
   std::string getModuleType();
-  void addPostModule(Module* postModule);
   void trigger();
-  void changeParam(const std::string& paramKey, int newParamValue);
-
+  /////////////////////
+  //REST
+  bool changeParam(const std::string& paramKey, int newParamValue);
+  int getParam(const std::string& paramKey);
+  const std::map<std::string, int>& getAllParams();
+  /////////////////////
   ~Module();
   Module();
   unsigned int ID = 0;
@@ -60,7 +67,6 @@ private:
 
 protected:
   std::string ModuleType;
-  std::vector<Module*> m_postModules;
   std::map<std::string, Signal*> m_signals;
   std::map<std::string, Slot*> m_slots;
   std::map<std::string, int> m_params;
