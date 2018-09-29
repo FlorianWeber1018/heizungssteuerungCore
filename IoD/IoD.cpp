@@ -226,7 +226,7 @@ bool serialCmdInterface::serialFlush(std::string cmdstr)
         //std::cout << "now flushing:";
         //plotFlushStringToConsole(cmdstr);
         //std::cout<< std::endl;
-		bufOut.push_back(cmdstr);
+        bufOut.push_back(cmdstr);
         flushCount++;
 		return false;
 	}
@@ -402,6 +402,7 @@ void serialCmdInterface::Sending()
 bool serialCmdInterface::sendOne(std::string m_string)
 {
 	int bytesToSend = m_string.length();
+    //plotFlushStringToConsole(m_string);
 	for(int i = 0; i < bytesToSend; i++){
 		m_string[i] -= number0;
 	}
@@ -480,6 +481,7 @@ IoD::IoD(bool cyclicSend,
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
     initMCU();
+    writeConfig(true);
 
     if(cyclicSend){
         initClock(milliseconds);
@@ -493,7 +495,6 @@ void IoD::initMCU()
         resetMCU();
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
-    cyclicSync();
 }
 void IoD::initClock(unsigned int milliseconds)
 {
@@ -528,12 +529,11 @@ unsigned long IoD::getClockCount()
 }
 void IoD::getDataFromSqlServer()
 {
-    std::string query = "SELECT portType, number, config, value FROM IoDPins";// ORDER BY portType, number;";
+    std::string query = "SELECT portType, number, config, value FROM IoDPins";
     MYSQL_RES *result = globalSQLCon.sendCommand(query);
 
     MYSQL_ROW row;
     if (result != nullptr) {
-        unsigned int test = mysql_num_fields(result);
         while (row = mysql_fetch_row(result)) {
             std::string portType = row[0];
             int number = std::stoi(row[1]);
@@ -660,7 +660,7 @@ void IoD::serialDispatcher(std::string cmd)
 {
 
 
-    //serialCmdInterface::serialDispatcher(cmd);
+    serialCmdInterface::serialDispatcher(cmd);
 
 
 
