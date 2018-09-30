@@ -482,7 +482,7 @@ IoD::IoD(bool cyclicSend,
 
     initMCU();
     writeConfig(true);
-
+    writeOutputs(true);
     if(cyclicSend){
         initClock(milliseconds);
     }
@@ -495,6 +495,7 @@ void IoD::initMCU()
         resetMCU();
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
 }
 void IoD::initClock(unsigned int milliseconds)
 {
@@ -660,7 +661,7 @@ void IoD::serialDispatcher(std::string cmd)
 {
 
 
-    serialCmdInterface::serialDispatcher(cmd);
+    //serialCmdInterface::serialDispatcher(cmd);
 
 
 

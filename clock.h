@@ -14,6 +14,9 @@ public:
   void stop();
   void setTimebase(std::chrono::milliseconds T);
 protected:
+  unsigned int callStackCnt = 0;
+  unsigned int callStackCntMax = 3;
+  std::mutex callstackMutex;
   void spawnNewThread();
   std::mutex m_mutex;
   bool m_run;

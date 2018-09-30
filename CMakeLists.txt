@@ -4,7 +4,7 @@ project(heizungssteuerung)
 
 add_executable(${PROJECT_NAME} "main.cpp" "mysqlcon.cpp" "clock.cpp" "IoD/IoD.cpp" "util.cpp" "REST/REST.cpp" "ModuleFramework/module.cpp" "ModuleFramework/control.cpp" "ModuleFramework/timer.cpp" "ModuleFramework/modulemanager.cpp")
 
-target_link_libraries(${PROJECT_NAME} "boost_system" "pthread" "mysqlclient")
+target_link_libraries(${PROJECT_NAME} "boost_system" "pthread" "mariadbclient")
 
 
 
