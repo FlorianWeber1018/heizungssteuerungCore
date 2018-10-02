@@ -80,8 +80,10 @@ class serialCmdInterface
 		void disconnect();
 		void run();
 		void stop();
-		//debug Function
+        //debug Functions
 		const void plotFlushStringToConsole(const std::string& flushString);
+        size_t getSizeBufOut();
+        bool getEmptyBufOut();
 	protected:
         unsigned long recCount = 0;     // only for debug information
         unsigned long sendCount = 0;    //
@@ -93,6 +95,8 @@ class serialCmdInterface
 		virtual void serialDispatcher(std::string cmd);
 		void Sending();
 		void Listening();
+        void addElementToBufOut(const std::string& cmd);
+        std::string takeElementFromBufOut();
 
 		std::string device;
 		int baudrate;
@@ -102,9 +106,8 @@ class serialCmdInterface
 		boost::asio::io_service ioService;
 		boost::asio::serial_port port;
 		int pollOne(char* buffer);
-		bool sendOne(std::string m_string);
-		std::list<std::string> bufOut;
-		std::list<std::string> bufIn;
+        bool sendOne(std::string &m_string);
+
 		volatile bool rtr;
 		//convert Functions especialy for the Protocol
         std::string to_flushString(int16_t number);
@@ -113,6 +116,9 @@ class serialCmdInterface
         std::string to_flushString(AdcConfig config);
         uint8_t to_uint8_t(const std::string& flushString);
         int16_t to_int16_t(const std::string& flushString);
+private:
+        std::mutex mutexBufOut;
+        std::list<std::string> bufOut;
 };
 class IoD : protected serialCmdInterface{
 public:

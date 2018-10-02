@@ -219,20 +219,20 @@ bool serialCmdInterface::serialFlush(std::string cmdstr)
 	if (connectionEstablished)
 	{
 		cmdstr += eot;
-		while(bufOut.size() >= SizeBufOutMax){
+        while(getSizeBufOut() >= SizeBufOutMax){
 			std::cout<< "BUFFER FULL !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		}
         //std::cout << "now flushing:";
         //plotFlushStringToConsole(cmdstr);
         //std::cout<< std::endl;
-        bufOut.push_back(cmdstr);
+        addElementToBufOut(cmdstr);
         flushCount++;
 		return false;
 	}
 	else
 	{
-		std::cout<<"serialFlush::noConnection"<<std::endl;
+        //std::cout<<"serialFlush::noConnection"<<std::endl;
 		return true;
 	}
 	return true;
@@ -386,10 +386,9 @@ void serialCmdInterface::Sending()
 	sendEnable=true;
 	while (sendEnable) {
 
-		if(!bufOut.empty()){
-			std::string temp = bufOut.front();
-			sendOne(temp);
-			bufOut.pop_front();
+        if(!getEmptyBufOut()){
+            std::string sendString = takeElementFromBufOut();
+            sendOne(sendString);
             sendCount++;
 			//}
 		}else{
@@ -399,7 +398,7 @@ void serialCmdInterface::Sending()
 	}
 }
 
-bool serialCmdInterface::sendOne(std::string m_string)
+bool serialCmdInterface::sendOne(std::string &m_string)
 {
 	int bytesToSend = m_string.length();
     //plotFlushStringToConsole(m_string);
@@ -421,7 +420,32 @@ int serialCmdInterface::pollOne(char* buffer)
 	return port.read_some(boost::asio::buffer(buffer, 1));
 }
 
-
+void serialCmdInterface::addElementToBufOut(const std::string& cmd)
+{
+    mutexBufOut.lock();
+    std::lock_guard<std::mutex> lg(mutexBufOut, std::adopt_lock);
+    bufOut.push_back(cmd);
+}
+std::string serialCmdInterface::takeElementFromBufOut()
+{
+    mutexBufOut.lock();
+    std::lock_guard<std::mutex> lg(mutexBufOut, std::adopt_lock);
+    std::string temp = bufOut.front();
+    bufOut.pop_front();
+    return temp;
+}
+size_t serialCmdInterface::getSizeBufOut()
+{
+    mutexBufOut.lock();
+    std::lock_guard<std::mutex> lg(mutexBufOut, std::adopt_lock);
+    return bufOut.size();
+}
+bool serialCmdInterface::getEmptyBufOut()
+{
+    mutexBufOut.lock();
+    std::lock_guard<std::mutex> lg(mutexBufOut, std::adopt_lock);
+    return bufOut.empty();
+}
 std::string serialCmdInterface::to_flushString(int16_t number)
 {
 	std::string result = {1,1,1,1,0};  //nullterminated
