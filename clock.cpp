@@ -1,5 +1,6 @@
 #include "clock.h"
 #include <functional>
+#include <iostream>
 namespace Clock{
 Clock::Clock(std::chrono::milliseconds T, std::function<void(void)> callback)
 {
@@ -17,6 +18,7 @@ void Clock::run()
   m_mutex.lock();
   std::lock_guard<std::mutex> lg(m_mutex, std::adopt_lock);
   m_callback();
+  decCallStackCnt();
 }
 
 void Clock::runAsync()
@@ -34,8 +36,25 @@ void Clock::setTimebase(std::chrono::milliseconds T)
 }
 
 void Clock::spawnNewThread(){
+
+    incCallStackCnt();
     std::thread t(&Clock::run, this);
     t.detach();
 }
 
+void Clock::incCallStackCnt()
+{
+    while(callStackCnt >= callStackCntMax){
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    callStackCnt++;
+}
+void Clock::decCallStackCnt()
+{
+    if(callStackCnt > 0){
+        callStackCnt--;
+    }else{
+        std::cout << "ERROR Clock::decCallStackCnt() ... callstack ! > 0" << std::endl;
+    }
+}
 }

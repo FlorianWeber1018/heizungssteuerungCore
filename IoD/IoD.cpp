@@ -525,8 +525,8 @@ void IoD::initClock(unsigned int milliseconds)
 {
     std::this_thread::sleep_for(std::chrono::seconds(2));
     m_clock = new Clock::Clock(std::chrono::milliseconds(milliseconds), std::bind(&IoD::cyclicSync,this) );
-    std::thread t(&Clock::Clock::run, m_clock);//start clock async
-    t.detach();
+    m_clock->runAsync();
+
 }
 IoD::~IoD()
 {
