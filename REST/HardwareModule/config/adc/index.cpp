@@ -1,22 +1,26 @@
 CROW_ROUTE(app, "/HardwareModule/config/adc")
 ([]{
-    crow::json::wvalue outValue;
+    pt::ptree tree;
     std::map<std::string, int> hardwareConfigMap;
     globalIoD.getConfigs(hardwareConfigMap, false, true);
     for(auto&& element : hardwareConfigMap){
-        outValue[element.first] = element.second;
+        tree.put(element.first, element.second);
     }
-    return outValue;
+    std::stringstream ss;
+    pt::json_parser::write_json(ss, tree);
+    return EchoJSON(ss.str());
 });
 CROW_ROUTE(app, "/HardwareModule/config/adc/<int>")
 ([](int number){
-    crow::json::wvalue outValue;
+    pt::ptree tree;
     std::map<std::string, int> hardwareConfigMap;
     globalIoD.getConfigs(hardwareConfigMap, false, true, number);
     for(auto&& element : hardwareConfigMap){
-        outValue[element.first] = element.second;
+        tree.put(element.first, element.second);
     }
-    return outValue;
+    std::stringstream ss;
+    pt::json_parser::write_json(ss, tree);
+    return EchoJSON(ss.str());
 });
 CROW_ROUTE(app, "/HardwareModule/config/adc/<int>").methods("PUT"_method)
 ([](const crow::request& req, int number){

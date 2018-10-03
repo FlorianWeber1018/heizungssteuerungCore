@@ -16,6 +16,16 @@ extern IoD::IoD globalIoD;
 extern Module::ModuleManager globalModuleManager;
 
 namespace REST{
+    crow::response EchoJSON(const std::string& specialInformation)
+    {
+        // echo response
+        crow::response resp;
+        resp.code = 200;
+        resp.add_header("Access-Control-Allow-Origin", "*");
+        resp.add_header("Content-Type", "application/json");
+        resp.write(specialInformation);
+        return resp;
+    }
     void restMain()
     {
 

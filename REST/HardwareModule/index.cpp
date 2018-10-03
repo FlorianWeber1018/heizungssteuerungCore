@@ -1,6 +1,6 @@
 CROW_ROUTE(app, "/HardwareModule")
 ([]{
-    crow::json::wvalue outValue;
+    pt::ptree tree;
 
     std::map<std::string, int> hardwareValueMap;
     globalIoD.getValues(hardwareValueMap, true, true);
@@ -8,7 +8,7 @@ CROW_ROUTE(app, "/HardwareModule")
     for(auto&& element : hardwareValueMap){
         std::string key = element.first;
         key.append("value");
-        outValue[key] = element.second;
+        tree.put(key, element.second);
     }
 
     std::map<std::string, int> hardwareConfigMap;
@@ -17,10 +17,11 @@ CROW_ROUTE(app, "/HardwareModule")
     for(auto&& element : hardwareConfigMap){
         std::string key = element.first;
         key.append("config");
-        outValue[key] = element.second;
+        tree.put(key, element.second);
     }
-
-    return outValue;
+    std::stringstream ss;
+    pt::json_parser::write_json(ss, tree);
+    return EchoJSON(ss.str());
 });
 #include "value/index.cpp"
 #include "config/index.cpp"
