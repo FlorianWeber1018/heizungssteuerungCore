@@ -6,28 +6,25 @@
 #include <atomic>
 #include <functional>
 namespace Clock{
+
+enum trigger{A_trigger, B_trigger};
+
 class Clock
 {
 public:
-  Clock(std::chrono::milliseconds T, std::function<void(void)> callback);
-
-  void runAsync();
-  void stop();
-  void setTimebase(std::chrono::milliseconds T);
+    Clock(std::chrono::milliseconds _T, std::function<void(void)> callback);
+    void start();
+    void stop();
 protected:
-  void run();
+    void threadloopA();
+    void threadloopB();
 
-  unsigned int callStackCnt = 0;
-  unsigned int callStackCntMax = 3;
+    volatile trigger m_trigger = A_trigger;
 
-  void incCallStackCnt();
-  void decCallStackCnt();
-  void spawnNewThread();
-  std::mutex m_mutex;
-  bool m_run;
-  std::chrono::milliseconds T;
-  std::function<void(void)> m_callback;
-
+    std::mutex m_CallbackMutex;
+    std::chrono::milliseconds T;
+    std::function<void(void)> m_callback;
+    volatile bool m_run = false;
 private:
 
 };

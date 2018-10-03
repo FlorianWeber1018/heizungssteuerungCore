@@ -220,8 +220,8 @@ bool serialCmdInterface::serialFlush(std::string cmdstr)
 	{
 		cmdstr += eot;
         while(getSizeBufOut() >= SizeBufOutMax){
-			std::cout<< "BUFFER FULL !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
-			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            std::cout<< "BUFFER FULL size: " << getSizeBufOut() << std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
         //std::cout << "now flushing:";
         //plotFlushStringToConsole(cmdstr);
@@ -392,7 +392,7 @@ void serialCmdInterface::Sending()
             sendCount++;
 			//}
 		}else{
-            std::this_thread::sleep_for(std::chrono::milliseconds(15));
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
             //std::cout << "wait, bufout empty";
 		}
 	}
@@ -525,7 +525,7 @@ void IoD::initClock(unsigned int milliseconds)
 {
     std::this_thread::sleep_for(std::chrono::seconds(2));
     m_clock = new Clock::Clock(std::chrono::milliseconds(milliseconds), std::bind(&IoD::cyclicSync,this) );
-    m_clock->runAsync();
+    m_clock->start();
 
 }
 IoD::~IoD()

@@ -11,7 +11,7 @@
 #include <thread>
 
 mSQL::mysqlcon globalSQLCon("192.168.178.91",3306,"IoD","637013","heating");
-IoD::IoD globalIoD(true, 10000, "/dev/ttyACM0",57600);
+IoD::IoD globalIoD(true, 1000, "/dev/ttyACM0",57600);
 
 Module::ClockDistributer globalClockDistributer;
 Module::ModuleManager globalModuleManager;
@@ -21,7 +21,7 @@ Clock::Clock globalClock(std::chrono::milliseconds(100), std::bind(&mainloop));
 int main(int argc, char* argv[]){
     std::thread t(REST::restMain);//start REST ASYNC
     t.detach();
-    globalClock.runAsync();
+    globalClock.start();
     while(1){
         std::this_thread::sleep_for(std::chrono::seconds(1));
     }
