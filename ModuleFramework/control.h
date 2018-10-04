@@ -23,6 +23,9 @@ class PID
 {
 public:
   float getOutput(float input, float w);
+  float getUp();
+  float getUi();
+  float getUd();
   config_PID config;
 protected:
   float up=0;

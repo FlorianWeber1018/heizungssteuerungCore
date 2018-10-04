@@ -4,6 +4,7 @@
 #include "timer.h"
 #include <algorithm>
 #include "../util.h"
+
 extern Module::ClockDistributer globalClockDistributer;
 extern mSQL::mysqlcon globalSQLCon;
 
@@ -11,6 +12,28 @@ extern mSQL::mysqlcon globalSQLCon;
 
 namespace Module {
 // ____Slot_____________________________________________________________________
+/*Slot::Slot(const std::string& _name)
+{
+    name = _name;
+}
+pt::ptree Slot::getProperties()
+{
+    pt::ptree tree;
+    tree.put("TYPE", "Slot");
+    tree.put("moduleID", getParentModuleID());
+    tree.put("name", this->name);
+    tree.put("connected", connected());
+    int value = 0;
+    if(this->value != nullptr){
+        value = *(this->value);
+    }
+    tree.put("value", value);
+    return tree;
+}*/
+unsigned int Slot::getParentModuleID()
+{
+    return m_parentModule == nullptr ? 0 : m_parentModule->ID;
+}
 void Slot::connectToSignal(Signal* _signal)
 {
 
@@ -33,6 +56,24 @@ bool Slot::connected()
    return m_signal == nullptr ? false : true;
 }
 // ____Signal___________________________________________________________________
+/*Signal::Signal(const std::string& _name)
+{
+    name = _name;
+}
+pt::ptree Signal::getProperties()
+{
+    pt::ptree tree;
+    tree.put("TYPE", "Signal");
+    tree.put("moduleID", getParentModuleID());
+    tree.put("name", this->name);
+    tree.put("connected", connected());
+    tree.put("value", value);
+    return tree;
+}*/
+unsigned int Signal::getParentModuleID()
+{
+    return m_parentModule == nullptr ? 0 : m_parentModule->ID;
+}
 void Signal::connectToSlot(Slot* _slot)
 {
     _slot->m_signal = this;
@@ -57,8 +98,8 @@ void Signal::emitSignal(int value)
     this->value = value;
     for(auto&& element : m_slots){
         element->synced=true;
-        if(element->m_module!=nullptr){
-            element->m_module->trigger();
+        if(element->m_parentModule!=nullptr){
+            element->m_parentModule->trigger();
         }
 
     }
@@ -126,8 +167,8 @@ void Module::triggerNext() {
     std::cout << "Module::triggerNext" << std::endl;
   for (auto&& _signal : m_signals) {
       for(auto&& _slot : _signal.second->m_slots){
-          if(_slot->m_module != nullptr){
-                _slot->m_module->trigger();
+          if(_slot->m_parentModule != nullptr){
+                _slot->m_parentModule->trigger();
                 if (debugMode)
                     std::cout << "1 Module triggered" << std::endl;
           }else{
@@ -152,6 +193,7 @@ void Module::process() {
 Signal *Module::createSignal(std::string signalName) {
   if (m_signals.count(signalName) == 0) {
     Signal *newSignal = new Signal();
+    newSignal->m_parentModule = this;
     m_signals[signalName] = newSignal;
     return newSignal;
   } else {
@@ -162,8 +204,8 @@ Signal *Module::createSignal(std::string signalName) {
 Slot *Module::createSlot(std::string slotName) {
   if (m_slots.count(slotName) == 0) {
     Slot *newSlot = new Slot();
+    newSlot->m_parentModule = this;
     m_slots[slotName] = newSlot;  
-    newSlot->m_module = this;
     return newSlot;
   } else {
     return m_slots.at(slotName);
@@ -291,6 +333,14 @@ const std::map<std::string, int>& Module::getAllParams()
 {
     return m_params;
 }
+const std::map<std::string, Signal*>& Module::getAllSignals()
+{
+    return m_signals;
+}
+const std::map<std::string, Slot*>& Module::getAllSlots()
+{
+    return m_slots;
+}
 // ____ConnectionHelper_________________________________________________________
 void ConnectionHelper::connect(Signal* _signal, Slot* _slot) const
 {
@@ -358,6 +408,9 @@ Module_3WayValve::Module_3WayValve(unsigned int ID) {
     createSlot("requiredTemperature");
     createSlot("actualTemperature");
     createSlot("!EN");
+    createSlot("up");
+    createSlot("ui");
+    createSlot("ud");
 
     createSignal("DutyCyclePWMinc");
     createSignal("DutyCyclePWMdec");
@@ -414,6 +467,9 @@ void Module_3WayValve::process() {
     }
     emitSignal("DutyCyclePWMinc", DC_inc);
     emitSignal("DutyCyclePWMdec", DC_dec);
+    emitSignal("up",static_cast<int>(pid.getUp()));
+    emitSignal("ui",static_cast<int>(pid.getUi()));
+    emitSignal("ud",static_cast<int>(pid.getUd()));
 }
 // ____Module_2Point____________________________________________________________
 Module_2Point::Module_2Point(unsigned int ID) {
@@ -524,6 +580,7 @@ void Module_Woodstove::process() {
   int dT_off = getParamValue("dT_off");
   int T_boilerMin = getParamValue("T_boilerMin");
   int T_boilerMinHyst = getParamValue("T_boilerMinHyst");
+
   int T_boiler = getSignalValue("T_boiler");
 
   int diff = T_boiler - getSignalValue("T_storage");
@@ -546,7 +603,7 @@ void Module_Woodstove::process() {
   emitSignal("loadPump", pumpState);
 //___________________________
 //________counter fan
-  int initCnt = getSignalValue("initCnt");
+  int initCnt = getParamValue("initCnt");
 
   int startButton = getSignalValue("startButton");
   int stopButton = getSignalValue("stopButton");
@@ -565,7 +622,6 @@ void Module_Woodstove::process() {
     emitSignal("cnt", m_timer.getSecondsToAlarm());
   }else{
     emitSignal("fan", 0);
-    emitSignal("cnt", 0);
     emitSignal("cnt", 0);
   }
 }

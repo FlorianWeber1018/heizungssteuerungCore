@@ -1,4 +1,3 @@
-
 #include "IoD/IoD.h"
 #include "IoD/COMprotocol.h"
 #include <iostream>
@@ -11,7 +10,7 @@
 #include <thread>
 
 mSQL::mysqlcon globalSQLCon("192.168.178.91",3306,"IoD","637013","heating");
-IoD::IoD globalIoD(true, 1000, "/dev/ttyACM0",57600);
+IoD::IoD globalIoD(false, 1000, "/dev/ttyACM0",57600);
 
 Module::ClockDistributer globalClockDistributer;
 Module::ModuleManager globalModuleManager;

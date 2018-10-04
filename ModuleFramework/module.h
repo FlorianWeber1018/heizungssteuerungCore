@@ -14,8 +14,7 @@
 #include "timer.h"
 #include "control.h"
 
-
-
+//namespace pt = boost::property_tree;
 namespace Module{
 
 struct Signal;  //forward declariation
@@ -23,12 +22,16 @@ class Module;   //forward declariation
 
 struct Slot
 {
+  //Slot(const std::string& _name);
+  std::string name;
+  //pt::ptree getProperties();
+  unsigned int getParentModuleID();
   bool connected();
   void connectToSignal(Signal* _signal);
   void breakConnectionToSignal();
   int* value = nullptr;
   Signal* m_signal = nullptr;
-  Module* m_module = nullptr;
+  Module* m_parentModule = nullptr;
   int min = INT_MIN;
   int max = INT_MAX;
   bool synced = false;
@@ -36,6 +39,10 @@ struct Slot
 
 struct Signal
 {
+  //Signal(const std::string& _name);
+  std::string name;
+ // pt::ptree getProperties();
+  unsigned int getParentModuleID();
   bool connected();
   void connectToSlot(Slot* _slot);
   void breakConnectionToSlot(Slot* _slot);
@@ -45,6 +52,7 @@ struct Signal
   int min = INT_MIN;
   int max = INT_MAX;
   std::vector<Slot*> m_slots;
+  Module* m_parentModule = nullptr;
 };
 
 class Module
@@ -59,6 +67,8 @@ public:
   bool changeParam(const std::string& paramKey, int newParamValue);
   int getParam(const std::string& paramKey);
   const std::map<std::string, int>& getAllParams();
+  const std::map<std::string, Signal*>& getAllSignals();
+  const std::map<std::string, Slot*>& getAllSlots();
   /////////////////////
   ~Module();
   Module();

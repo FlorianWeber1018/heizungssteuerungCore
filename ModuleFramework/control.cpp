@@ -23,6 +23,18 @@ void config_ServoPWM::syncParam(int input_max, int input_min, int incPWM_max, in
   this->decPWM_max = static_cast<float>(decPWM_max);
   this->decPWM_min = static_cast<float>(decPWM_min);
 }
+float PID::getUp()
+{
+    return up;
+}
+float PID::getUi()
+{
+    return ui;
+}
+float PID::getUd()
+{
+    return ud;
+}
 float PID::getOutput(float x, float w)
 {
   float e = w - x;

@@ -20,13 +20,42 @@ CROW_ROUTE(app, "/ModuleManager/module")
         std::string keyToParams = keyToModule;
         keyToParams += ".Parameters";
 
+        std::string keyToSignals = keyToModule;
+        keyToSignals += ".Signals";
+
+        std::string keyToSlots = keyToModule;
+        keyToSlots += ".Slot";
+
         const std::map<std::string, int>& paramMap = element.second->getAllParams();
+        const std::map<std::string, Module::Signal*>& signalMap = element.second->getAllSignals();
+        const std::map<std::string, Module::Slot*>& slotMap = element.second->getAllSlots();
         for(auto&& element : paramMap){
             std::string keyToParam = keyToParams;
             keyToParam += ".";
             keyToParam += element.first;
             tree.put(keyToParam, element.second);
         }
+        for(auto&& element : signalMap){
+            std::string keyToSignal = keyToSignals;
+            keyToSignal += ".";
+            keyToSignal += element.first;
+            std::string keyToSignalValue = keyToSignal;
+            keyToSignalValue += ".value";
+            tree.put(keyToSignalValue, element.second->value);
+            std::string keyToSignalSlots = keyToSignal;
+            keyToSignalSlots += ".connectedSlots";
+            for(auto&& slotElement : element.second->m_slots){
+              unsigned int ModuleID = slotElement->m_parentModule == nullptr ? 0 : slotElement->m_parentModule->ID;
+              tree.add(keyToSignalSlots, ModuleID);
+            }
+
+        }
+        /*for(auto&& element : slotMap){
+            std::string keyToSlot = keyToSlots;
+            keyToSlot += ".";
+            keyToSlot += element.first;
+            tree.put(keyToSlot, element.second);
+        }*/
     }
     std::stringstream ss;
     pt::json_parser::write_json(ss, tree);
