@@ -25,6 +25,17 @@ namespace REST{
         resp.write(specialInformation);
         return resp;
     }
+    crow::response responseOPTIONS()
+    {
+        crow::response resp;
+        resp.code = 200;
+        resp.add_header("Access-Control-Allow-Origin", "*");
+        resp.add_header("Access-Control-Allow-Headers", "*");
+        resp.add_header("Access-Control-Allow-Methods", "*");
+        resp.add_header("Content-Type", "application/json");
+        resp.write("");
+        return resp;
+    }
     crow::response EchoJSONFailed(const std::string& specialInformation)
     {
         // echo response
@@ -74,6 +85,12 @@ namespace REST{
             std::stringstream ss;
             pt::json_parser::write_json(ss, resTree);
             return EchoJSONSuccessful( ss.str() );
+        });
+        CROW_ROUTE(app, "/EVENT")
+                .methods("OPTIONS"_method)
+        ([]()
+        {
+            return responseOPTIONS();
         });
         CROW_ROUTE(app, "/EVENT")
                 .methods("POST"_method)
