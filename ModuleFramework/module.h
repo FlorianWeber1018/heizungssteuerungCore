@@ -5,6 +5,7 @@
 #define debugMode 0
 
 #include <algorithm>
+
 #include <climits>
 #include <vector>
 #include <string>
@@ -14,7 +15,9 @@
 #include "timer.h"
 #include "control.h"
 
-//namespace pt = boost::property_tree;
+#include <boost/property_tree/ptree_fwd.hpp>
+namespace pt = boost::property_tree;
+
 namespace Module{
 
 struct Signal;  //forward declariation
@@ -22,9 +25,8 @@ class Module;   //forward declariation
 
 struct Slot
 {
-  //Slot(const std::string& _name);
   std::string name;
-  //pt::ptree getProperties();
+  pt::ptree getProperties();
   unsigned int getParentModuleID();
   bool connected();
   void connectToSignal(Signal* _signal);
@@ -39,9 +41,8 @@ struct Slot
 
 struct Signal
 {
-  //Signal(const std::string& _name);
   std::string name;
- // pt::ptree getProperties();
+  pt::ptree getProperties();
   unsigned int getParentModuleID();
   bool connected();
   void connectToSlot(Slot* _slot);
@@ -58,6 +59,7 @@ struct Signal
 class Module
 {
 public:
+  pt::ptree getProperties();
   Signal* getSignal(std::string signalName);
   Slot* getSlot(std::string slotName);
   std::string getModuleType();
@@ -210,6 +212,22 @@ protected:
   void process() override;
 private:
 };
+//______________________________________________________________________________
+//____Module which provides an Button which can be clicked by an rest Event_____
+//    INPUT={}
+//    OUTPUT= {S}
+enum Module_Button_Mode{btn_trigger = 0, btn_toggle = 1};
+class Module_Button : public Module
+{
+public:
+  Module_Button(unsigned int ID);
+  void ClickEvent();
+protected:
+  int value = 0;
+  void process() override;
+private:
+};
+//______________________________________________________________________________
 //______________________________________________________________________________
 }
 #endif

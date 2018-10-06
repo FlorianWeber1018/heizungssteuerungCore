@@ -13,6 +13,7 @@
 extern mSQL::mysqlcon globalSQLCon;
 
 namespace IoD{
+
 unsigned int Pin::get_number()
 {
     _mutex.lock();
@@ -115,6 +116,10 @@ IoPin::IoPin(unsigned int number = 0, unsigned char value = 0, IoConfig config =
     this->number = number;
     this->targetValue = value;
     this->targetConfig = config;
+    std::string signalSlotName = "IO_";
+    signalSlotName += std::to_string(number);
+    this->signal.name = signalSlotName;
+    this->slot.name = signalSlotName;
 }
 IoPin& IoPin::operator =(const IoPin& other)
 {
@@ -151,6 +156,8 @@ AdcPin::AdcPin(unsigned int number = 0, unsigned char value = 0, AdcConfig confi
     this->number = number;
     this->targetValue = value;
     this->targetConfig = config;
+    this->signal.name = "ADC_";
+    this->signal.name += std::to_string(number);
 }
 AdcPin& AdcPin::operator =(const AdcPin& other)
 {

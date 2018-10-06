@@ -1,0 +1,37 @@
+#include "eventhandler.h"
+#include <boost/property_tree/ptree.hpp>
+#include "../ModuleFramework/module.h"
+#include "../ModuleFramework/modulemanager.h"
+#include "../IoD/IoD.h"
+
+namespace pt = boost::property_tree;
+
+extern IoD::IoD globalIoD;
+extern Module::ModuleManager globalModuleManager;
+
+namespace EventHandler{
+
+bool POST_ButtonClick(const pt::ptree& passedParams)
+{
+    if(passedParams.count("buttonID") > 0){
+        unsigned int buttonID = passedParams.get("buttonID", 0);
+        Module::Module* module = globalModuleManager.getModule(buttonID);
+        if(module != nullptr){
+            if(module->getModuleType() == "Button"){
+                Module::Module_Button* moduleButton = static_cast<Module::Module_Button*>(module);
+                moduleButton->ClickEvent();
+                return true;
+            }else{
+                return false; // Module is not a Module_Button
+            }
+        }else{
+            return false;//module does not exist
+        }
+        return true;
+    }else{
+        return false;
+    }
+}
+
+
+}//namespace EventHandler

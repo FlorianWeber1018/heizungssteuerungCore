@@ -44,6 +44,7 @@ struct Pin{
     void set_value(int16_t _value);     //only for dispatcher
     void set_config(uint8_t _config);   //
     Module::Signal signal;
+
 protected:
 
     mutable std::mutex _mutex;

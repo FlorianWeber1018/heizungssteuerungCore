@@ -2,12 +2,14 @@
 #define MODULEMANAGER_H
 
 #include "module.h"
+#include <boost/property_tree/ptree_fwd.hpp>
 namespace Module {
 
 
 class ModuleManager
 {
 public:
+    pt::ptree getProperties();
     ModuleManager();
     void createModule(const std::string& newModuleType);                        //all (interface for rest)
     void createModule(const std::string& newModuleType, unsigned int newID);    //all (interface for rest)

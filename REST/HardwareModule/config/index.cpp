@@ -8,7 +8,7 @@ CROW_ROUTE(app, "/HardwareModule/config")
     }
     std::stringstream ss;
     pt::json_parser::write_json(ss, tree);
-    return EchoJSON(ss.str());
+    return EchoJSONSuccessful(ss.str());
 });
 #include "io/index.cpp"
 #include "adc/index.cpp"

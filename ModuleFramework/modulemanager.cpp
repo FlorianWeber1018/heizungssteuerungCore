@@ -1,3 +1,4 @@
+#include <boost/property_tree/ptree.hpp>
 #include "modulemanager.h"
 #include "module.h"
 #include "../mysqlcon.h"
@@ -8,6 +9,23 @@ extern mSQL::mysqlcon globalSQLCon;
 extern IoD::IoD globalIoD;
 
 namespace Module {
+pt::ptree ModuleManager::getProperties()
+{
+    pt::ptree tree;
+    tree.put("TYPE", "ModuleManager");
+
+    pt::ptree modulesTree;
+
+    for(auto&& element : m_modules)
+    {
+        pt::ptree _moduleTree = element.second->getProperties();
+        _moduleTree.put("ID", element.first);
+        modulesTree.put_child(std::to_string(element.first), _moduleTree);
+    }
+    tree.put_child("modules", modulesTree);
+
+    return tree;
+}
 ModuleManager::ModuleManager()
 {
     std::map<unsigned int, std::string> moduleMap;
@@ -111,6 +129,8 @@ void ModuleManager::createModule(const std::string& newModuleType, unsigned int 
             addModule(newID, new Module_MedianFilter(newID));
         }else if(newModuleType == "woodstove"){
             addModule(newID, new Module_Woodstove(newID));
+        }else if(newModuleType == "button"){
+            addModule(newID, new Module_Button(newID));
         }
     }
 

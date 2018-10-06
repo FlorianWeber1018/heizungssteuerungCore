@@ -4,6 +4,7 @@
 #include "timer.h"
 #include <algorithm>
 #include "../util.h"
+#include <boost/property_tree/ptree.hpp>
 
 extern Module::ClockDistributer globalClockDistributer;
 extern mSQL::mysqlcon globalSQLCon;
@@ -12,24 +13,29 @@ extern mSQL::mysqlcon globalSQLCon;
 
 namespace Module {
 // ____Slot_____________________________________________________________________
-/*Slot::Slot(const std::string& _name)
-{
-    name = _name;
-}
+
 pt::ptree Slot::getProperties()
 {
     pt::ptree tree;
     tree.put("TYPE", "Slot");
     tree.put("moduleID", getParentModuleID());
-    tree.put("name", this->name);
-    tree.put("connected", connected());
+    tree.put("keyName", name);
     int value = 0;
     if(this->value != nullptr){
         value = *(this->value);
     }
     tree.put("value", value);
+    pt::ptree connectedSignal;
+    if(m_signal != nullptr){
+        connectedSignal.put("TYPE", "Signal");
+        connectedSignal.put("moduleID", m_signal->getParentModuleID());
+        connectedSignal.put("keyName", m_signal->name);
+    }
+
+
+    tree.put_child("connection", connectedSignal);
     return tree;
-}*/
+}
 unsigned int Slot::getParentModuleID()
 {
     return m_parentModule == nullptr ? 0 : m_parentModule->ID;
@@ -56,20 +62,30 @@ bool Slot::connected()
    return m_signal == nullptr ? false : true;
 }
 // ____Signal___________________________________________________________________
-/*Signal::Signal(const std::string& _name)
-{
-    name = _name;
-}
+
 pt::ptree Signal::getProperties()
 {
     pt::ptree tree;
     tree.put("TYPE", "Signal");
     tree.put("moduleID", getParentModuleID());
-    tree.put("name", this->name);
-    tree.put("connected", connected());
+    tree.put("keyName", name);
+    pt::ptree connectedSlots;
+    for(auto&& element : m_slots){
+        pt::ptree connectedSlot;
+        connectedSlot.put("TYPE", "Slot");
+        connectedSlot.put("moduleID", element->getParentModuleID());
+        connectedSlot.put("keyName", element->name);
+
+        std::string nodeKeyStr = std::to_string(element->getParentModuleID());
+        nodeKeyStr += "__";
+        nodeKeyStr += element->name;
+
+        connectedSlots.put_child(nodeKeyStr, connectedSlot);
+    }
     tree.put("value", value);
+    tree.put_child("connections", connectedSlots);
     return tree;
-}*/
+}
 unsigned int Signal::getParentModuleID()
 {
     return m_parentModule == nullptr ? 0 : m_parentModule->ID;
@@ -109,6 +125,43 @@ bool Signal::connected()
     return m_slots.size() > 0 ? true : false;
 }
 // ____Module___________________________________________________________________
+pt::ptree Module::getProperties()
+{
+    pt::ptree tree;
+    tree.put("TYPE", "Module");
+    tree.put("moduleID", this->ID);
+    tree.put("moduleType", ModuleType);
+
+    pt::ptree parameterTree;
+    pt::ptree signalTree;
+    pt::ptree slotTree;
+
+
+    for(auto&& parameter : m_params)
+    {
+        std::string keyToParameterKey = parameter.first;
+        keyToParameterKey += ".key";
+        std::string keyToParameterValue = parameter.first;
+        keyToParameterValue += ".value";
+        parameterTree.put(keyToParameterKey, parameter.first);
+        parameterTree.put(keyToParameterValue, parameter.second);
+    }
+    for(auto&& element : m_signals)
+    {
+        pt::ptree _signalTree = element.second->getProperties();
+        signalTree.put_child(element.first, _signalTree);
+    }
+    for(auto&& element : m_slots)
+    {
+        pt::ptree _slotTree = element.second->getProperties();
+        slotTree.put_child(element.first, _slotTree);
+    }
+    tree.put_child("parameters", parameterTree);
+    tree.put_child("signals", signalTree);
+    tree.put_child("slots", slotTree);
+
+    return tree;
+}
 void Module::emitSignal(std::string signalName, int value)
 {
   Signal *signal = nullptr;
@@ -194,6 +247,7 @@ Signal *Module::createSignal(std::string signalName) {
   if (m_signals.count(signalName) == 0) {
     Signal *newSignal = new Signal();
     newSignal->m_parentModule = this;
+    newSignal->name = signalName;
     m_signals[signalName] = newSignal;
     return newSignal;
   } else {
@@ -205,6 +259,7 @@ Slot *Module::createSlot(std::string slotName) {
   if (m_slots.count(slotName) == 0) {
     Slot *newSlot = new Slot();
     newSlot->m_parentModule = this;
+    newSlot->name = slotName;
     m_slots[slotName] = newSlot;  
     return newSlot;
   } else {
@@ -624,6 +679,39 @@ void Module_Woodstove::process() {
     emitSignal("fan", 0);
     emitSignal("cnt", 0);
   }
+}
+
+// ____MODULE_Button____________________________________________________________
+Module_Button::Module_Button(unsigned int ID)
+{
+    this->ID = ID;
+    this->ModuleType = "Button";
+    createSignal("S");
+    createParam("Mode", btn_trigger);
+    globalClockDistributer.addDestination(this);
+}
+void Module_Button::ClickEvent()
+{
+    switch (getParamValue("Mode"))
+    {
+        case btn_toggle:{
+            if(value == 1){
+                value = 0;
+            }else if(value == 0){
+                value = 1;
+            }
+        }break;
+        case btn_trigger:{
+            value = 1;
+        }break;
+    }
+}
+void Module_Button::process()
+{
+    emitSignal("S", value);
+    if(getParam("Mode") == btn_trigger){
+        value = 0;
+    }
 }
 // _____________________________________________________________________________
 

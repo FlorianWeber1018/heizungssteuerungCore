@@ -8,7 +8,7 @@ CROW_ROUTE(app, "/HardwareModule/value/adc")
     }
     std::stringstream ss;
     pt::json_parser::write_json(ss, tree);
-    return EchoJSON(ss.str());
+    return EchoJSONSuccessful(ss.str());
 });
 CROW_ROUTE(app, "/HardwareModule/value/adc/<int>")
 ([](int number){
@@ -20,5 +20,5 @@ CROW_ROUTE(app, "/HardwareModule/value/adc/<int>")
     }
     std::stringstream ss;
     pt::json_parser::write_json(ss, tree);
-    return EchoJSON(ss.str());
+    return EchoJSONSuccessful(ss.str());
 });

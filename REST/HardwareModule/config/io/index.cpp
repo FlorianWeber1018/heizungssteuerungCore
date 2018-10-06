@@ -8,7 +8,7 @@ CROW_ROUTE(app, "/HardwareModule/config/io")
     }
     std::stringstream ss;
     pt::json_parser::write_json(ss, tree);
-    return EchoJSON(ss.str());
+    return EchoJSONSuccessful(ss.str());
 });
 CROW_ROUTE(app, "/HardwareModule/config/io/<int>")
 ([](int number){
@@ -20,7 +20,7 @@ CROW_ROUTE(app, "/HardwareModule/config/io/<int>")
     }
     std::stringstream ss;
     pt::json_parser::write_json(ss, tree);
-    return EchoJSON(ss.str());
+    return EchoJSONSuccessful(ss.str());
 });
 CROW_ROUTE(app, "/HardwareModule/config/io/<int>").methods("PUT"_method)
 ([](const crow::request& req, int number){
