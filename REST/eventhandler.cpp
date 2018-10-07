@@ -32,6 +32,22 @@ bool POST_ButtonClick(const pt::ptree& passedParams)
         return false;
     }
 }
-
+bool POST_UpdateModuleParam(const pt::ptree &passedParams)
+{
+    if(passedParams.count("moduleID") > 0 && passedParams.count("paramKey") > 0 && passedParams.count("newParam") > 0){
+        unsigned int moduleID = passedParams.get("moduleID", 0);
+        Module::Module* module = globalModuleManager.getModule(moduleID);
+        if(module != nullptr){
+            std::string paramKey = passedParams.get("paramKey", "");
+            int newParam = passedParams.get("newParam", 0);
+            return module->changeParam(paramKey, newParam);
+        }else{
+            return false;//module does not exist
+        }
+        return true;
+    }else{
+        return false; //no moduleID passed
+    }
+}
 
 }//namespace EventHandler

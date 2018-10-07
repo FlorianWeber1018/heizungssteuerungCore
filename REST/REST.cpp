@@ -106,6 +106,8 @@ namespace REST{
                 bool result = false;
                 if(eventType == "ButtonClick"){
                     result = EventHandler::POST_ButtonClick(passedParams);
+                }else if(eventType == "UpdateModuleParam"){
+                    result = EventHandler::POST_UpdateModuleParam(passedParams);
                 }
                 return EchoJSONEventResult(result);
             }else{
