@@ -131,6 +131,12 @@ void ModuleManager::createModule(const std::string& newModuleType, unsigned int 
             addModule(newID, new Module_Woodstove(newID));
         }else if(newModuleType == "button"){
             addModule(newID, new Module_Button(newID));
+        }else if(newModuleType == "AND"){
+            addModule(newID, new Module_AND(newID));
+        }else if(newModuleType == "OR"){
+            addModule(newID, new Module_OR(newID));
+        }else if(newModuleType == "MUX"){
+            addModule(newID, new Module_MUX(newID));
         }
     }
 

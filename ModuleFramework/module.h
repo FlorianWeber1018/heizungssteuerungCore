@@ -228,6 +228,41 @@ protected:
 private:
 };
 //______________________________________________________________________________
+//____Module which provides a logic AND_________________________________________
+//    INPUT={S0, S1, S2, S3, S4, S5, S6, S7}
+//    OUTPUT= {S}
+class Module_AND : public Module
+{
+public:
+  Module_AND(unsigned int ID);
+protected:
+  void process() override;
+private:
+};
+//______________________________________________________________________________
+//____Module which provides a logic OR__________________________________________
+//    INPUT={S0, S1, S2, S3, S4, S5, S6, S7}
+//    OUTPUT= {S}
+class Module_OR : public Module
+{
+public:
+  Module_OR(unsigned int ID);
+protected:
+  void process() override;
+private:
+};
+//______________________________________________________________________________
+//____Module which provides a MUX_______________________________________________
+//    INPUT={Select, S0, S1, S2, S3, S4, S5, S6, S7}
+//    OUTPUT= {S}
+class Module_MUX : public Module
+{
+public:
+  Module_MUX(unsigned int ID);
+protected:
+  void process() override;
+private:
+};
 //______________________________________________________________________________
 }
 #endif

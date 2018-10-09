@@ -714,5 +714,85 @@ void Module_Button::process()
     }
 }
 // _____________________________________________________________________________
-
+Module_AND::Module_AND(unsigned int ID)
+{
+    this->ID = ID;
+    this->ModuleType = "AND";
+    createSignal("S");
+    createSlot("S0");
+    createSlot("S1");
+    createSlot("S2");
+    createSlot("S3");
+    createSlot("S4");
+    createSlot("S5");
+    createSlot("S6");
+    createSlot("S7");
+}
+void Module_AND::process()
+{
+    bool result = true;
+    for(auto&& element : m_slots)
+    {
+        if(element.second->connected()){
+            if( ! getSignalValue(element.first) > 0 ){
+                result &= false;
+            }
+        }
+    }
+    if(result){
+        emitSignal("S", 1);
+    }else{
+        emitSignal("S", 0);
+    }
+}
+// _____________________________________________________________________________
+Module_OR::Module_OR(unsigned int ID)
+{
+    this->ID = ID;
+    this->ModuleType = "OR";
+    createSignal("S");
+    createSlot("S0");
+    createSlot("S1");
+    createSlot("S2");
+    createSlot("S3");
+    createSlot("S4");
+    createSlot("S5");
+    createSlot("S6");
+    createSlot("S7");
+}
+void Module_OR::process()
+{
+    int result = 0;
+    for(auto&& element : m_slots)
+    {
+        if(element.second->connected()){
+            result += getSignalValue(element.first);
+        }
+    }
+    util::moveToBorders(result,0, 1);
+    emitSignal("S", result);
+}
+// _____________________________________________________________________________
+Module_MUX::Module_MUX(unsigned int ID)
+{
+    createSignal("S");
+    createSlot("Select");
+    createSlot("S0");
+    createSlot("S1");
+    createSlot("S2");
+    createSlot("S3");
+    createSlot("S4");
+    createSlot("S5");
+    createSlot("S6");
+    createSlot("S7");
+}
+void Module_MUX::process()
+{
+    int select = getSignalValue("Select");
+    util::moveToBorders(select, 0, 7);
+    std::string SlotName = "S";
+    SlotName += std::to_string(select);
+    emitSignal("S", getSignalValue(SlotName));
+}
+// _____________________________________________________________________________
 }//namespace
