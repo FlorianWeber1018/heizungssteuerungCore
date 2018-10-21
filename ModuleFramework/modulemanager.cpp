@@ -16,10 +16,13 @@ pt::ptree ModuleManager::getProperties()
 
     pt::ptree modulesTree;
 
+    pt::ptree IoDTree = globalIoD.getProperties();
+    tree.put_child("IoD", IoDTree);
+
     for(auto&& element : m_modules)
     {
         pt::ptree _moduleTree = element.second->getProperties();
-        _moduleTree.put("ID", element.first);
+        //_moduleTree.put("ID", element.first);
         modulesTree.put_child(std::to_string(element.first), _moduleTree);
     }
     tree.put_child("modules", modulesTree);

@@ -1,3 +1,4 @@
+#include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <map>
 #include "IoD.h"
@@ -10,6 +11,8 @@
 #include "COMprotocol.h"
 #include <functional>
 #include "../util.h"
+
+
 extern mSQL::mysqlcon globalSQLCon;
 
 namespace IoD{
@@ -109,7 +112,40 @@ void Pin::set_targetConfig(uint8_t _targetConfig)
 
 
 
+pt::ptree IoPin::getProperties()
+{
+    pt::ptree tree;
+    pt::ptree configTree;
 
+    tree.put("TYPE", "IoPin");
+    tree.put("NUMBER", get_number());
+    uint8_t config = get_config();
+    bool conf_inverted = (config & 1) == 1 ?  true : false;
+
+
+    std::string conf_Mode;
+    if(config >= 0 && config <= 1)
+    {//input
+        tree.put_child("signal", get_signal().getProperties());
+        conf_Mode = "Input";
+    }
+    else if(config >= 2 && config <= 5)
+    {//output
+        tree.put_child("slot", get_slot().getProperties());
+        if(config <=3){
+            conf_Mode = "OutputBool";
+        }else{
+            conf_Mode = "OutputPWM";
+        }
+    }
+    configTree.put("configValue", config);
+    configTree.put("Inverted", conf_inverted);
+    configTree.put("Mode", conf_Mode);
+
+    tree.put_child("config", configTree);
+
+    return tree;
+}
 
 IoPin::IoPin(unsigned int number = 0, unsigned char value = 0, IoConfig config = IoConfig::nInvInput)
 {
@@ -150,6 +186,43 @@ Module::Slot& IoPin::get_slot(){
     _mutex.lock();
     std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
     return slot;
+}
+
+
+pt::ptree AdcPin::getProperties()
+{
+    pt::ptree tree;
+    pt::ptree signalTree = get_signal().getProperties();
+    pt::ptree configTree;
+    pt::ptree sensorConversionTree;
+    pt::ptree lowpassFilterTree;
+    tree.put("TYPE", "AdcPin");
+    tree.put("NUMBER", get_number());
+    uint8_t config = get_config();
+    bool conf_LpEn = (config & 1) == 1 ?  true : false;
+    bool conf_SensorConvEn = (config & 2) == 2 ? true : false;
+
+    std::string conf_SenseType;
+    if(config >= 0 && config <= 3)
+    {
+        conf_SenseType = "PT1000";
+    }
+    else if(config >=4 && config <=7)
+    {
+        conf_SenseType = "PT2000";
+    }
+
+    lowpassFilterTree.put("EN", conf_LpEn);
+
+    sensorConversionTree.put("EN", conf_SensorConvEn);
+    sensorConversionTree.put("SensorType", conf_SenseType);
+
+    configTree.put("configValue", config);
+    configTree.put_child("LowpassFilter", lowpassFilterTree);
+    configTree.put_child("SensorConversion", sensorConversionTree);
+    tree.put_child("signal", signalTree);
+    tree.put_child("config", configTree);
+    return tree;
 }
 AdcPin::AdcPin(unsigned int number = 0, unsigned char value = 0, AdcConfig config = AdcConfig::pt2000_11)
 {
@@ -524,7 +597,7 @@ void IoD::initMCU()
 {
     while(!mcuResetDone){
         resetMCU();
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 }
@@ -955,6 +1028,38 @@ void IoD::syncInUse()
     for(auto& element : adcMap){
         element.second.syncInUse();
     }
+}
+pt::ptree IoD::getProperties()
+{
+    pt::ptree tree;
+    tree.put("TYPE", "IoD");
+    tree.put("ID", 0);
+
+    pt::ptree inputTree;
+    pt::ptree outputTree;
+    pt::ptree adcTree;
+
+    for(auto&& element : ioMapInput)
+    {
+        pt::ptree pinTree = element.second.getProperties();
+        inputTree.put_child(std::to_string(element.first), pinTree);
+    }
+    for(auto&& element : ioMapOutput)
+    {
+        pt::ptree pinTree = element.second.getProperties();
+        outputTree.put_child(std::to_string(element.first), pinTree);
+    }
+    for(auto&& element : adcMap)
+    {
+        pt::ptree pinTree = element.second.getProperties();
+        adcTree.put_child(std::to_string(element.first), pinTree);
+    }
+
+    tree.put_child("inputs", inputTree);
+    tree.put_child("outputs", outputTree);
+    tree.put_child("adc", adcTree);
+
+    return tree;
 }
 
 }

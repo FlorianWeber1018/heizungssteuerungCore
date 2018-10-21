@@ -129,7 +129,7 @@ pt::ptree Module::getProperties()
 {
     pt::ptree tree;
     tree.put("TYPE", "Module");
-    tree.put("moduleID", this->ID);
+    tree.put("ID", this->ID);
     tree.put("moduleType", ModuleType);
 
     pt::ptree parameterTree;
@@ -647,7 +647,7 @@ void Module_Woodstove::process() {
   }
   if ( T_boiler >= ( T_boilerMin + T_boilerMinHyst ) ) {
     minPumpState = 1;
-  } else if (diff <= T_boilerMin) {
+  } else if (T_boiler <= T_boilerMin) {
     minPumpState = 0;
   }
   if( ( diffPumpState & minPumpState ) == 1 ){

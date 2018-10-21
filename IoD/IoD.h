@@ -11,11 +11,13 @@
 #include "../mysqlcon.h"
 #include "../ModuleFramework/module.h"
 #include "../clock.h"
+#include <boost/property_tree/ptree_fwd.hpp>
 
 #ifndef asio_serial
 #define asio_serial boost::asio::serial_port_base
 #endif
 
+namespace pt = boost::property_tree;
 
 
 namespace IoD{
@@ -57,6 +59,7 @@ protected:
 };
 struct IoPin : public Pin
 {
+    pt::ptree getProperties();
     IoPin(unsigned int number, unsigned char value, IoConfig config);
     IoPin& operator =(const IoPin& other);
     void syncInUse(); //determine inUse
@@ -66,6 +69,7 @@ struct IoPin : public Pin
 };
 struct AdcPin : public Pin
 {
+    pt::ptree getProperties();
     AdcPin(unsigned int number, unsigned char value, AdcConfig config);
     AdcPin& operator =(const AdcPin& other);
     void syncInUse(); //determine inUse
@@ -143,6 +147,7 @@ public:
     void syncInUse(); // look in all signals/slots and set in use in the pin objekt true / fals eif the signal/slot is connected/not
     void test();
     ////// REST interface
+    pt::ptree getProperties();
     void getValues(std::map<std::string, int>& outMap, bool io, bool adc, int number = -1); //number == -1 --> all configs returned
     void getConfigs(std::map<std::string, int>& outMap, bool io, bool adc, int number = -1); //number == -1 --> all configs returned
     void changeConfig(char portType, int number, uint8_t newConfig);
