@@ -622,6 +622,7 @@ Module_Woodstove::Module_Woodstove(unsigned int ID) {
     createParam("T_boilerMin", 55);
     createParam("T_boilerMinHyst", 4);
     createParam("initCnt", 3600);
+    createParam("reloadCnt", 1200);
 }
 void Module_Woodstove::process() {
   if(debugMode==4){
@@ -659,6 +660,7 @@ void Module_Woodstove::process() {
 //___________________________
 //________counter fan
   int initCnt = getParamValue("initCnt");
+  int reloadCnt = getParamValue("reloadCnt");
 
   int startButton = getSignalValue("startButton");
   int stopButton = getSignalValue("stopButton");
@@ -672,7 +674,7 @@ void Module_Woodstove::process() {
   if(!m_timer.getAlarmState()){//counter is running
     emitSignal("fan", 1);
     if(pumpState == 1){
-      m_timer.reload(initCnt);
+      m_timer.reload(reloadCnt);
     }
     emitSignal("cnt", m_timer.getSecondsToAlarm());
   }else{

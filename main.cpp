@@ -9,7 +9,7 @@
 #include <functional>
 #include <thread>
 
-mSQL::mysqlcon globalSQLCon("localhost",3306,"IoD","637013","heating");
+mSQL::mysqlcon globalSQLCon("192.168.178.91",3306,"IoD","637013","heating");
 IoD::IoD globalIoD(false, 1000, "/dev/ttyACM0",57600);
 
 Module::ClockDistributer globalClockDistributer;
