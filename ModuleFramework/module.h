@@ -265,11 +265,9 @@ private:
 };
 //______________________________________________________________________________
 //____Module to log data to the SQL server______________________________________
-//    INPUT={S}
+//    INPUT={S, EN}
 //    OUTPUT= {}
-//    param={interval, label}
-
-
+//    param={label, clkDiv}
 class Module_datalogger : public Module
 {
 public:
@@ -280,5 +278,17 @@ protected:
     void process() override;
 };
 //______________________________________________________________________________
+//______________________________________________________________________________
+//____Module to perform an afine transformation___(m = scaler, b = translation)_
+//    INPUT={S}
+//    OUTPUT= {S}
+//    param={m, b}
+class Module_transformation : public Module
+{
+public:
+    Module_transformation(unsigned int ID);
+protected:
+    void process() override;
+};
 }
 #endif

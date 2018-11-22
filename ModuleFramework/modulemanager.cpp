@@ -142,6 +142,8 @@ void ModuleManager::createModule(const std::string& newModuleType, unsigned int 
             addModule(newID, new Module_MUX(newID));
         }else if(newModuleType == "datalogger"){
             addModule(newID, new Module_datalogger(newID));
+        }else if(newModuleType == "transformation"){
+            addModule(newID, new Module_transformation(newID));
         }
     }
 }

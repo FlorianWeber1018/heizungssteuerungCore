@@ -832,4 +832,24 @@ void Module_datalogger::process()
 
 }
 // _____________________________________________________________________________
+
+Module_transformation::Module_transformation(unsigned int ID)
+{
+    this->ID = ID;
+    this->ModuleType = "transformation";
+    createSignal("S");
+    createSlot("S");
+    createParam("m", 1);
+    createParam("b", 0);
+}
+void Module_transformation::process()
+{
+    float x = static_cast<float>(getSignalValue("S"));
+    float m = static_cast<float>(getParam("m"));
+    float b = static_cast<float>(getParam("b"));
+    float y = (m * x) + b;
+    emitSignal("S", static_cast<int>(y));
+}
+
+// _____________________________________________________________________________
 }//namespace
