@@ -140,10 +140,10 @@ void ModuleManager::createModule(const std::string& newModuleType, unsigned int 
             addModule(newID, new Module_OR(newID));
         }else if(newModuleType == "MUX"){
             addModule(newID, new Module_MUX(newID));
+        }else if(newModuleType == "datalogger"){
+            addModule(newID, new Module_datalogger(newID));
         }
     }
-
-
 }
 
 void ModuleManager::getModulesFromServer(std::map<unsigned int, std::string>& outMap)

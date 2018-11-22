@@ -264,5 +264,21 @@ protected:
 private:
 };
 //______________________________________________________________________________
+//____Module to log data to the SQL server______________________________________
+//    INPUT={S}
+//    OUTPUT= {}
+//    param={interval, label}
+
+
+class Module_datalogger : public Module
+{
+public:
+    Module_datalogger(unsigned int ID);
+protected:
+    void insertIntoLoggingTableOnServer(const int& label, const int& value);
+    int cnt = 0;
+    void process() override;
+};
+//______________________________________________________________________________
 }
 #endif

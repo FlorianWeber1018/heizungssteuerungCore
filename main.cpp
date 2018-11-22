@@ -45,7 +45,7 @@ void mainloop(){
         firstRun=false; //inputs not yet available
     }else{
         globalClockDistributer.trigger();
-        globalIoD.triggerPostModules();
+        //globalIoD.triggerPostModules();
         globalIoD.writeOutputs(false);
     }
     globalIoD.readInputs(false);

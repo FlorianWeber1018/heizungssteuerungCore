@@ -369,7 +369,6 @@ void Module::createParamOrUpdateOnServer(const std::string& paramKey, const int 
 
     MYSQL_RES *result = globalSQLCon.sendCommand(query);
 
-    MYSQL_ROW row;
     if (result != nullptr) {
         mysql_free_result(result);
     }
@@ -777,6 +776,8 @@ void Module_OR::process()
 // _____________________________________________________________________________
 Module_MUX::Module_MUX(unsigned int ID)
 {
+    this->ID = ID;
+    this->ModuleType = "MUX";
     createSignal("S");
     createSlot("Select");
     createSlot("S0");
@@ -795,6 +796,40 @@ void Module_MUX::process()
     std::string SlotName = "S";
     SlotName += std::to_string(select);
     emitSignal("S", getSignalValue(SlotName));
+}
+// _____________________________________________________________________________
+Module_datalogger::Module_datalogger(unsigned int ID)
+{
+    this->ID = ID;
+    this->ModuleType = "datalogger";
+    createParam("label", 0);
+    createParam("clkDiv", 1);
+    createSlot("S");
+    createSlot("EN");
+}
+void Module_datalogger::insertIntoLoggingTableOnServer(const int& label, const int& value)
+{
+     std::string query = "INSERT INTO DataLog (label, millisec, value) VALUES(";
+     query.append(std::to_string(label));
+     query.append(", UNIX_TIMESTAMP(CURTIME(3)) * 1000, ");
+     query.append(std::to_string(value));
+     query.append(" );");
+     MYSQL_RES *result = globalSQLCon.sendCommand(query);
+
+     if (result != nullptr) {
+         mysql_free_result(result);
+     }
+}
+void Module_datalogger::process()
+{
+    cnt++;
+    if(getSignalValue("EN") > 0){
+        if(cnt >= getParam("clkDiv")){
+            insertIntoLoggingTableOnServer(getParam("label"), getSignalValue("S"));
+            cnt=0;
+        }
+    }
+
 }
 // _____________________________________________________________________________
 }//namespace
