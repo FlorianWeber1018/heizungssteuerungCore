@@ -462,9 +462,10 @@ Module_3WayValve::Module_3WayValve(unsigned int ID) {
     createSlot("requiredTemperature");
     createSlot("actualTemperature");
     createSlot("!EN");
-    createSlot("up");
-    createSlot("ui");
-    createSlot("ud");
+
+    createSignal("up");
+    createSignal("ui");
+    createSignal("ud");
 
     createSignal("DutyCyclePWMinc");
     createSignal("DutyCyclePWMdec");

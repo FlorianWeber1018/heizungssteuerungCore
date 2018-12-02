@@ -34,7 +34,7 @@ bool mysqlcon::connect()
 	//Connect to the database
 	if (mysql_real_connect(m_mysql, host.c_str(), user.c_str(), pw.c_str(), db.c_str(), port, NULL, 0) == NULL)
 	{
-		this->connected = true;
+        this->connected = true;//wird in disconnect false
 		this->disconnect();
 		return false;
 	}
@@ -68,6 +68,7 @@ MYSQL_RES* mysqlcon::sendCommand(std::string sendstring)
 	if(connected){
         return sendCommand(sendstring, m_mysql);
 	}
+    std::cout << "mysqlcon::sendCommand::noConnection" << std::endl;
 	return NULL;
 }
 }
