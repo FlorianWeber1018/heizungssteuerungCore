@@ -296,8 +296,7 @@ bool Module::changeParam(const std::string& paramKey, int newParamValue)
 
     if(util::searchInMap(m_params, paramKey, param)){
         m_params[paramKey] = newParamValue;
-        createParamOrUpdateOnServer(paramKey, newParamValue);
-        return true;
+        return createParamOrUpdateOnServer(paramKey, newParamValue);
     }else{
         return false;
     }
@@ -357,7 +356,7 @@ void Module::getParamFromServerIfExists(const std::string& paramKey, int &outPar
         mysql_free_result(result);
     }
 }
-void Module::createParamOrUpdateOnServer(const std::string& paramKey, const int &newParamValue)
+bool Module::createParamOrUpdateOnServer(const std::string& paramKey, const int &newParamValue)
 {
     std::string query = "REPLACE INTO ModuleConfig (ModuleID, ParamKey, Param) VALUES (";
     query.append(std::to_string(this->ID));
@@ -367,11 +366,7 @@ void Module::createParamOrUpdateOnServer(const std::string& paramKey, const int 
     query.append(std::to_string(newParamValue));
     query.append(" );");
 
-    MYSQL_RES *result = globalSQLCon.sendCommand(query);
-
-    if (result != nullptr) {
-        mysql_free_result(result);
-    }
+    return globalSQLCon.sendCUD(query);
 }
 std::string Module::getModuleType()
 {

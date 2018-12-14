@@ -18,6 +18,8 @@ public:
 	bool connect();
 	void disconnect();
 	MYSQL_RES* sendCommand(std::string sendstring);
+    bool sendCUD(const std::string& sendstring);
+
 private:
 	MYSQL_RES* sendCommand(std::string, MYSQL* connectionObject);
 	MYSQL* m_mysql;
@@ -26,7 +28,9 @@ private:
 	unsigned int port;
 	std::string user;
 	std::string pw;
-	std::string db;
+    std::string db;
+    unsigned int getAffectedRows();
+    void printError(int ErrCode);
 };
 }
 #endif

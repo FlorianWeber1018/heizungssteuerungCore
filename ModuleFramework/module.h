@@ -77,7 +77,7 @@ public:
   unsigned int ID = 0;
 private:
   void getParamFromServerIfExists(const std::string& paramKey, int& outParam);
-  void createParamOrUpdateOnServer(const std::string& paramKey, const int& newParamValue);
+  bool createParamOrUpdateOnServer(const std::string& paramKey, const int& newParamValue);
 
 protected:
   std::string ModuleType;

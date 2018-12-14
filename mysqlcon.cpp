@@ -71,4 +71,43 @@ MYSQL_RES* mysqlcon::sendCommand(std::string sendstring)
     std::cout << "mysqlcon::sendCommand::noConnection" << std::endl;
 	return NULL;
 }
+bool mysqlcon::sendCUD(const std::string& sendstring)
+{
+    _mutex.lock();
+    std::lock_guard<std::mutex> lg(_mutex, std::adopt_lock);
+    if(connected){
+        int ErrCode = mysql_query(m_mysql, sendstring.c_str());
+        if(ErrCode){
+            printError(ErrCode);
+            return false;
+        }else{
+            return true;
+        }
+    }
+}
+unsigned int mysqlcon::getAffectedRows(){
+    return mysql_affected_rows(m_mysql);
+}
+void mysqlcon::printError(int ErrCode){
+    switch(ErrCode){
+    case 0:{
+
+    }break;
+    case 2014:{
+        std::cout << "mysqlcon::sendCommand::printErr(ErrCode): " << "Commands were executed in an improper order" << std::endl;
+    }break;
+    case 2006:{
+        std::cout << "mysqlcon::sendCommand::printErr(ErrCode): " << "MySQL server has gone away" << std::endl;
+    }break;
+    case 2013:{
+        std::cout << "mysqlcon::sendCommand::printErr(ErrCode): " << "The connection to the server was lost during the query" << std::endl;
+    }break;
+    case 2000:{
+        std::cout << "mysqlcon::sendCommand::printErr(ErrCode): " << "An unknown error occurred" << std::endl;
+    }break;
+    default:{
+        std::cout << "mysqlcon::sendCommand::printErr(ErrCode): " << "IDontKnowErr?!?" << std::endl;
+    }
+    }
+}
 }

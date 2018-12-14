@@ -9,6 +9,7 @@ extern mSQL::mysqlcon globalSQLCon;
 extern IoD::IoD globalIoD;
 
 namespace Module {
+
 pt::ptree ModuleManager::getProperties()
 {
     pt::ptree tree;
@@ -31,7 +32,7 @@ pt::ptree ModuleManager::getProperties()
 }
 ModuleManager::ModuleManager()
 {
-    std::map<unsigned int, std::string> moduleMap;
+    std::map<unsigned int, ModuleDescription> moduleMap;
     getModulesFromServer(moduleMap);
     for(auto&& element : moduleMap){
         createModule(element.second, element.first);
@@ -80,12 +81,12 @@ const std::map<unsigned int, Module*>& ModuleManager::getAllModules()
     return m_modules;
 }
 
-void ModuleManager::createModuleOnServer(const std::string& newModuleType, unsigned int newID)
+void ModuleManager::createModuleOnServer(const ModuleDescription& newModule, unsigned int newID)
 {
     std::string query = "INSERT INTO ModuleList (ID, TYPE) VALUES (";
     query.append(std::to_string(newID));
     query.append(", '");
-    query.append(newModuleType);
+    query.append(newModule.TYPE);
     query.append("') ;");
 
     MYSQL_RES *result = globalSQLCon.sendCommand(query);
@@ -107,57 +108,70 @@ void ModuleManager::deleteModuleOnServer(unsigned int ID)
         mysql_free_result(result);
     }
 }
-void ModuleManager::createModule(const std::string& newModuleType)
+void ModuleManager::createModule(const std::string &newModule)
+{
+    ModuleDescription t;
+    t.TYPE = newModule;
+    createModule(t);
+}
+void ModuleManager::createModule(const std::string &newModule, unsigned int newID)
+{
+    ModuleDescription t;
+    t.TYPE = newModule;
+    createModule(t,newID);
+}
+void ModuleManager::createModule(const ModuleDescription& newModule)
 {
     unsigned int newID = getBiggestIdFromTable("ModuleList");
     newID++;
-    createModule(newModuleType, newID);
+    createModule(newModule, newID);
 }
-void ModuleManager::createModule(const std::string& newModuleType, unsigned int newID)
+void ModuleManager::createModule(const ModuleDescription& newModule, unsigned int newID)
 {
     Module** tempModuleNotUsed = nullptr;
     if( ! util::searchInMap(m_modules, newID, tempModuleNotUsed)){
-        createModuleOnServer(newModuleType, newID);
-        if(newModuleType == "constant"){
+        createModuleOnServer(newModule, newID);
+        if(newModule.TYPE == "constant"){
             addModule(newID, new Module_constant(newID));
-        }else if(newModuleType == "debug"){
+        }else if(newModule.TYPE == "debug"){
             addModule(newID, new Module_debug(newID));
-        }else if(newModuleType == "2Point"){
+        }else if(newModule.TYPE == "2Point"){
             addModule(newID, new Module_2Point(newID));
-        }else if(newModuleType == "3WayValve"){
+        }else if(newModule.TYPE == "3WayValve"){
             addModule(newID, new Module_3WayValve(newID));
-        }else if(newModuleType == "inverter"){
+        }else if(newModule.TYPE == "inverter"){
             addModule(newID, new Module_Inverter(newID));
-        }else if(newModuleType == "medianFilter"){
+        }else if(newModule.TYPE == "medianFilter"){
             addModule(newID, new Module_MedianFilter(newID));
-        }else if(newModuleType == "woodstove"){
+        }else if(newModule.TYPE == "woodstove"){
             addModule(newID, new Module_Woodstove(newID));
-        }else if(newModuleType == "button"){
+        }else if(newModule.TYPE == "button"){
             addModule(newID, new Module_Button(newID));
-        }else if(newModuleType == "AND"){
+        }else if(newModule.TYPE == "AND"){
             addModule(newID, new Module_AND(newID));
-        }else if(newModuleType == "OR"){
+        }else if(newModule.TYPE == "OR"){
             addModule(newID, new Module_OR(newID));
-        }else if(newModuleType == "MUX"){
+        }else if(newModule.TYPE == "MUX"){
             addModule(newID, new Module_MUX(newID));
-        }else if(newModuleType == "datalogger"){
+        }else if(newModule.TYPE == "datalogger"){
             addModule(newID, new Module_datalogger(newID));
-        }else if(newModuleType == "transformation"){
+        }else if(newModule.TYPE == "transformation"){
             addModule(newID, new Module_transformation(newID));
         }
     }
 }
 
-void ModuleManager::getModulesFromServer(std::map<unsigned int, std::string>& outMap)
+void ModuleManager::getModulesFromServer(std::map<unsigned int, ModuleDescription >& outMap)
 {
-    std::string query = "SELECT ID, Type from ModuleList;";
+    std::string query = "SELECT ID, Type, UserDescription from ModuleList;";
 
     MYSQL_RES *result = globalSQLCon.sendCommand(query);
 
     MYSQL_ROW row;
     if (result != nullptr) {
         while (row = mysql_fetch_row(result)) {
-            outMap[static_cast<unsigned int>(std::stol(row[0]))] = row[1];
+            outMap[static_cast<unsigned int>(std::stol(row[0]))].TYPE = row[1];
+            outMap[static_cast<unsigned int>(std::stol(row[0]))].UserDescription = row[2];
         }
         mysql_free_result(result);
     }
