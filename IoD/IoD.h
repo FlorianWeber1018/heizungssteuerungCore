@@ -133,6 +133,7 @@ public:
         unsigned int baudrate
         );
     ~IoD();
+    size_t getBufOutCnt();
     unsigned long getRecCount();        // only for debug information
     unsigned long getSendCount();       //
     unsigned long getFlushCount();      //

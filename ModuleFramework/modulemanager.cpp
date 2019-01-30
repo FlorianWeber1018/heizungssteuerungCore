@@ -157,6 +157,8 @@ void ModuleManager::createModule(const ModuleDescription& newModule, unsigned in
             addModule(newID, new Module_datalogger(newID));
         }else if(newModule.TYPE == "transformation"){
             addModule(newID, new Module_transformation(newID));
+        }else if(newModule.TYPE == "clockTimer"){
+            addModule(newID, new Module_clockTimer(newID));
         }
     }
 }

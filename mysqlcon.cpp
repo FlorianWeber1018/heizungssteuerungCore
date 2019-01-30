@@ -4,6 +4,8 @@
 #include <mysql/mysql.h>
 #include <mutex>
 #include <thread>
+#include <boost/property_tree/ptree.hpp>
+
 namespace mSQL{
 mysqlcon::mysqlcon(std::string host, unsigned int port, std::string user, std::string pw, std::string db)
 {
@@ -21,6 +23,21 @@ mysqlcon::mysqlcon(std::string host, unsigned int port, std::string user, std::s
 }
 mysqlcon::~mysqlcon() {
 	disconnect();
+}
+pt::ptree mysqlcon::MYSQL_RES_to_ptree(MYSQL_RES* resultset, unsigned int keyColNumber)
+{
+    pt::ptree resTree;
+    if(resultset != nullptr){
+
+        while (MYSQL_ROW row = mysql_fetch_row(resultset)) {
+            pt::ptree rowTree;
+            for(uint i = 0; i < resultset->field_count; i++){
+                rowTree.put(resultset->fields[i].name, row[i]);
+            }
+            resTree.put_child(row[keyColNumber], rowTree);
+        }
+    }
+    return resTree;
 }
 bool mysqlcon::connect()
 {
@@ -91,7 +108,7 @@ unsigned int mysqlcon::getAffectedRows(){
 void mysqlcon::printError(int ErrCode){
     switch(ErrCode){
     case 0:{
-
+        return;
     }break;
     case 2014:{
         std::cout << "mysqlcon::sendCommand::printErr(ErrCode): " << "Commands were executed in an improper order" << std::endl;
@@ -109,5 +126,6 @@ void mysqlcon::printError(int ErrCode){
         std::cout << "mysqlcon::sendCommand::printErr(ErrCode): " << "IDontKnowErr?!?" << std::endl;
     }
     }
+    std::cout << "code was:" << ErrCode << std::endl;
 }
 }

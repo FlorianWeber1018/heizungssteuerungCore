@@ -9,12 +9,12 @@
 #include <functional>
 #include <thread>
 
-mSQL::mysqlcon globalSQLCon("192.168.178.91",3306,"IoD","637013","heating");
+mSQL::mysqlcon globalSQLCon("localhost",3306,"IoD","637013","heating");
 IoD::IoD globalIoD(false, 1000, "/dev/ttyACM0",57600);
 
 Module::ClockDistributer globalClockDistributer;
 Module::ModuleManager globalModuleManager;
-Clock::Clock globalClock(std::chrono::milliseconds(100), std::bind(&mainloop));
+Clock::Clock globalClock(std::chrono::milliseconds(500), std::bind(&mainloop));
 
 
 int main(int argc, char* argv[]){
@@ -41,13 +41,16 @@ int main(int argc, char* argv[]){
 
 void mainloop(){
     static volatile bool firstRun=true;
-    if(firstRun){
-        firstRun=false; //inputs not yet available
+    if(globalIoD.getBufOutCnt() == 0){
+        if(firstRun){
+            firstRun=false; //inputs not yet available
+        }else{
+            globalClockDistributer.trigger();
+            globalIoD.writeOutputs(false);
+        }
+        globalIoD.readInputs(false);
     }else{
-        globalClockDistributer.trigger();
-        //globalIoD.triggerPostModules();
-        globalIoD.writeOutputs(false);
+        std::cout << "buff isn t sended completely. Cycle was skiped!";
     }
-    globalIoD.readInputs(false);
 }
 

@@ -593,6 +593,9 @@ IoD::IoD(bool cyclicSend,
 
 
 }
+size_t IoD::getBufOutCnt(){
+    return getSizeBufOut();
+}
 void IoD::initMCU()
 {
     while(!mcuResetDone){

@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <mysql/mysql.h>
 #include <mutex>
+#include <boost/property_tree/ptree_fwd.hpp>
+namespace pt = boost::property_tree;
+
 namespace mSQL{
 
 
@@ -19,7 +22,7 @@ public:
 	void disconnect();
 	MYSQL_RES* sendCommand(std::string sendstring);
     bool sendCUD(const std::string& sendstring);
-
+    static pt::ptree MYSQL_RES_to_ptree(MYSQL_RES* resultset, unsigned int keyColNumber);
 private:
 	MYSQL_RES* sendCommand(std::string, MYSQL* connectionObject);
 	MYSQL* m_mysql;

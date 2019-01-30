@@ -5,7 +5,8 @@
 #include <algorithm>
 #include "../util.h"
 #include <boost/property_tree/ptree.hpp>
-
+#include <chrono>
+#include <ctime>
 extern Module::ClockDistributer globalClockDistributer;
 extern mSQL::mysqlcon globalSQLCon;
 
@@ -846,6 +847,45 @@ void Module_transformation::process()
     float y = (m * x) + b;
     emitSignal("S", static_cast<int>(y));
 }
+// _____________________________________________________________________________
 
+Module_clockTimer::Module_clockTimer(unsigned int ID)
+{
+    this->ID = ID;
+    this->ModuleType = "clockTimer";
+    createSignal("S");
+    createParam("Te", 0);
+    createParam("Ta", 0);
+    globalClockDistributer.addDestination(this);
+}
+void Module_clockTimer::process()
+{
+    unsigned int Te = getParam("Te");
+    unsigned int Ta = getParam("Ta");
+    auto utcTime = std::chrono::system_clock::to_time_t( std::chrono::system_clock::now() );
+    std::tm now = *std::localtime( &utcTime );
+
+    unsigned int h = now.tm_hour;
+    unsigned int m = now.tm_min;
+    unsigned int time = (h * 100) + m;
+    int outsignal = 0 ;
+    if(Te > Ta){
+        if(time > Ta && time < Te){
+            outsignal = 0;
+        }else{
+            outsignal = 1;
+        }
+    }else if(Te < Ta){
+        if(time > Te && time < Ta){
+            outsignal = 1;
+        }else{
+            outsignal = 0;
+        }
+    }else if(Te == Ta){
+        outsignal = 0;
+    }
+    emitSignal("S", outsignal);
+    //std::cout << "state:" << outsignal << std::endl;
+}
 // _____________________________________________________________________________
 }//namespace

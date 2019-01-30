@@ -290,5 +290,18 @@ public:
 protected:
     void process() override;
 };
+//______________________________________________________________________________
+//______________________________________________________________________________
+//____Module to perform a clock timer___________________________________________
+//    INPUT={}
+//    OUTPUT= {S}
+//    param={Te, Ta} (einschaltzeitpunkt ausschaltzeitpunkt in uhrzeit (zB 2245 = 22:45))
+class Module_clockTimer : public Module
+{
+public:
+    Module_clockTimer(unsigned int ID);
+protected:
+    void process() override;
+};
 }
 #endif
