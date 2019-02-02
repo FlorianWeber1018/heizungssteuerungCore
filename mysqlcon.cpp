@@ -96,7 +96,15 @@ bool mysqlcon::sendCUD(const std::string& sendstring)
         int ErrCode = mysql_query(m_mysql, sendstring.c_str());
         if(ErrCode){
             printError(ErrCode);
-            return false;
+            disconnect();//reconnect
+            connect();//reconnect
+            ErrCode = mysql_query(m_mysql, sendstring.c_str());//try again
+            if(ErrCode){
+                return false;
+            }else{
+                return true;
+            }
+
         }else{
             return true;
         }
