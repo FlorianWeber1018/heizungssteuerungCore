@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.2.0, 2019-02-03T23:16:29. -->
+
+
+
+<!-- Written by QtCreator 4.5.2, 2019-01-31T23:04:10. -->
+
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -63,7 +67,11 @@
   <valuemap type="QVariantMap">
    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">Desktop</value>
    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">Desktop</value>
-   <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">{7d840db0-a541-4d18-9fad-770d1e728f89}</value>
+
+
+
+   <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">{f66aa83f-6cad-4928-9f7a-5c8b8de649a3}</value>
+
    <value type="int" key="ProjectExplorer.Target.ActiveBuildConfiguration">2</value>
    <value type="int" key="ProjectExplorer.Target.ActiveDeployConfiguration">0</value>
    <value type="int" key="ProjectExplorer.Target.ActiveRunConfiguration">0</value>
@@ -343,7 +351,11 @@
     <value type="QString" key="CMakeProjectManager.CMakeRunConfiguation.Title">heizungssteuerung</value>
     <value type="QString" key="CMakeProjectManager.CMakeRunConfiguration.Arguments"></value>
     <value type="QString" key="CMakeProjectManager.CMakeRunConfiguration.UserWorkingDirectory"></value>
-    <value type="QString" key="CMakeProjectManager.CMakeRunConfiguration.UserWorkingDirectory.default">/home/pi/build-heizungssteuerungCore-Desktop-Release</value>
+
+
+
+    <value type="QString" key="CMakeProjectManager.CMakeRunConfiguration.UserWorkingDirectory.default">/home/heizungubuntu/build-heizungssteuerung-Desktop-Release</value>
+
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">heizungssteuerung</value>
