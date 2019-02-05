@@ -102,6 +102,7 @@ class serialCmdInterface
 		void Listening();
         void addElementToBufOut(const std::string& cmd);
         std::string takeElementFromBufOut();
+        void clearBuffer();
 
 		std::string device;
 		int baudrate;
@@ -132,6 +133,7 @@ public:
         const std::string& device,
         unsigned int baudrate
         );
+    void reconnect();
     ~IoD();
     size_t getBufOutCnt();
     unsigned long getRecCount();        // only for debug information

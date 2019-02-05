@@ -526,6 +526,10 @@ bool serialCmdInterface::getEmptyBufOut()
     std::lock_guard<std::mutex> lg(mutexBufOut, std::adopt_lock);
     return bufOut.empty();
 }
+void serialCmdInterface::clearBuffer()
+{
+    bufOut.clear();
+}
 std::string serialCmdInterface::to_flushString(int16_t number)
 {
 	std::string result = {1,1,1,1,0};  //nullterminated
@@ -590,8 +594,18 @@ IoD::IoD(bool cyclicSend,
     if(cyclicSend){
         initClock(milliseconds);
     }
-
-
+}
+void IoD::reconnect()
+{
+    serialCmdInterface::stop();
+    serialCmdInterface::disconnect();
+    serialCmdInterface::clearBuffer();
+    serialCmdInterface::connect();
+    serialCmdInterface::run();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    initMCU();
+    writeConfig(true);
+    writeOutputs(true);
 }
 size_t IoD::getBufOutCnt(){
     return getSizeBufOut();

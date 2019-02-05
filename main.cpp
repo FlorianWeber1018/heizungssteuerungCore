@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
 
 void mainloop(){
     static volatile bool firstRun=true;
-    if(globalIoD.getBufOutCnt() == 0){
+    if(globalIoD.getBufOutCnt() <=50){
         if(firstRun){
             firstRun=false; //inputs not yet available
         }else{
@@ -50,7 +50,10 @@ void mainloop(){
         }
         globalIoD.readInputs(false);
     }else{
-        std::cout << "buff isn t sended completely. Cycle was skiped!";
+        globalClock.stop();
+        std::cout << "buff isn t sended completely. Cycle was skiped! trying to reconnect to mcu" << std::endl;
+        globalIoD.reconnect();
+        globalClock.start();
     }
 }
 
