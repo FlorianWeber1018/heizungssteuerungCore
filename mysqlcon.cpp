@@ -24,6 +24,17 @@ mysqlcon::mysqlcon(std::string host, unsigned int port, std::string user, std::s
 mysqlcon::~mysqlcon() {
 	disconnect();
 }
+std::string mysqlcon::getTimeString()
+{
+    MYSQL_RES* res;
+    res = sendCommand("SELECT NOW();");
+    MYSQL_ROW row;
+    if (res != nullptr) {
+        row = mysql_fetch_row(res);
+        mysql_free_result(res);
+        return row[0];
+    }
+}
 pt::ptree mysqlcon::MYSQL_RES_to_ptree(MYSQL_RES* resultset, unsigned int keyColNumber)
 {
     pt::ptree resTree;
@@ -131,7 +142,7 @@ void mysqlcon::printError(int ErrCode){
         std::cout << "mysqlcon::sendCommand::printErr(ErrCode): " << "An unknown error occurred" << std::endl;
     }break;
     default:{
-        std::cout << "mysqlcon::sendCommand::printErr(ErrCode): " << "IDontKnowErr?!?" << std::endl;
+        std::cout << "mysqlcon::sendCommand::printErr(ErrCode): " << "IDontKnowErr?!? CODE:" << ErrCode << std::endl;
     }
     }
     std::cout << "code was:" << ErrCode << std::endl;

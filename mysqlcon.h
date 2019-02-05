@@ -16,6 +16,7 @@ public:
 	mysqlcon(std::string host, unsigned int port, std::string user,
 		std::string pw, std::string db
 	);
+    std::string getTimeString();
 	std::mutex _mutex;
 	~mysqlcon();
 	bool connect();

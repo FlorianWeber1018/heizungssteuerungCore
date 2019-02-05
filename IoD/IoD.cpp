@@ -445,9 +445,13 @@ void serialCmdInterface::Listening()
 	while (listenEnable) {
 
 		char polledChar = 0;
-        serialCmdInterface::pollOne(&polledChar);
-        polledChar += number0;
+        try{
+            serialCmdInterface::pollOne(&polledChar);
+        }catch(...){
+            continue;
+        }
 
+        polledChar += number0;
 
 		if(polledChar == eot){
 			serialDispatcher(tempIn);
@@ -486,7 +490,12 @@ bool serialCmdInterface::sendOne(std::string &m_string)
 		m_string[i] -= number0;
 	}
 	if(connectionEstablished){
-			boost::asio::write( port, boost::asio::buffer( m_string, bytesToSend ) );
+        try{
+            boost::asio::write( port, boost::asio::buffer( m_string, bytesToSend ) );
+        }
+        catch(...){
+            return true;
+        }
 	}else{
 
 		return true;
@@ -497,7 +506,7 @@ bool serialCmdInterface::sendOne(std::string &m_string)
 
 int serialCmdInterface::pollOne(char* buffer)
 {
-	return port.read_some(boost::asio::buffer(buffer, 1));
+    return port.read_some(boost::asio::buffer(buffer, 1));
 }
 
 void serialCmdInterface::addElementToBufOut(const std::string& cmd)

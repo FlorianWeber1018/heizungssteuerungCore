@@ -123,6 +123,7 @@ class serialCmdInterface
         uint8_t to_uint8_t(const std::string& flushString);
         int16_t to_int16_t(const std::string& flushString);
 private:
+
         std::mutex mutexBufOut;
         std::list<std::string> bufOut;
 };

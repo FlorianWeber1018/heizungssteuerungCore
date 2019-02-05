@@ -8,13 +8,13 @@
 #include "main.h"
 #include <functional>
 #include <thread>
-
-mSQL::mysqlcon globalSQLCon("localhost",3306,"IoD","637013","heating");
+#include "serveradress.h"
+mSQL::mysqlcon globalSQLCon(serveradress,3306,"IoD","637013","heating");
 IoD::IoD globalIoD(false, 1000, "/dev/ttyACM0",57600);
 
 Module::ClockDistributer globalClockDistributer;
 Module::ModuleManager globalModuleManager;
-Clock::Clock globalClock(std::chrono::milliseconds(500), std::bind(&mainloop));
+Clock::Clock globalClock(std::chrono::milliseconds(100), std::bind(&mainloop));
 
 
 int main(int argc, char* argv[]){
@@ -51,7 +51,10 @@ void mainloop(){
         globalIoD.readInputs(false);
     }else{
         globalClock.stop();
-        std::cout << "buff isn t sended completely. Cycle was skiped! trying to reconnect to mcu" << std::endl;
+        std::cout << "buff isn t sended completely." <<
+                     " Cycle was skiped! trying to reconnect to mcu Time: " <<
+                     globalSQLCon.getTimeString() <<
+                     std::endl;
         globalIoD.reconnect();
         globalClock.start();
     }
