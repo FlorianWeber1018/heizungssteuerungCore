@@ -55,6 +55,7 @@ void mainloop(){
                      " Cycle was skiped! trying to reconnect to mcu Time: " <<
                      globalSQLCon.getTimeString() <<
                      std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
         globalIoD.reconnect();
         globalClock.start();
     }

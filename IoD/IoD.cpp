@@ -445,11 +445,11 @@ void serialCmdInterface::Listening()
 	while (listenEnable) {
 
 		char polledChar = 0;
-        try{
+        //try{
             serialCmdInterface::pollOne(&polledChar);
-        }catch(...){
+        //}catch(...){
             continue;
-        }
+        //}
 
         polledChar += number0;
 
@@ -490,12 +490,12 @@ bool serialCmdInterface::sendOne(std::string &m_string)
 		m_string[i] -= number0;
 	}
 	if(connectionEstablished){
-        try{
+        //try{
             boost::asio::write( port, boost::asio::buffer( m_string, bytesToSend ) );
-        }
-        catch(...){
+        //}
+        //catch(...){
             return true;
-        }
+        //}
 	}else{
 
 		return true;
@@ -607,9 +607,13 @@ IoD::IoD(bool cyclicSend,
 void IoD::reconnect()
 {
     serialCmdInterface::stop();
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
     serialCmdInterface::disconnect();
     serialCmdInterface::clearBuffer();
     serialCmdInterface::connect();
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     serialCmdInterface::run();
     std::this_thread::sleep_for(std::chrono::seconds(1));
     initMCU();
