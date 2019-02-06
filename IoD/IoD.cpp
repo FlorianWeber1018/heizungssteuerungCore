@@ -448,7 +448,7 @@ void serialCmdInterface::Listening()
         //try{
             serialCmdInterface::pollOne(&polledChar);
         //}catch(...){
-            continue;
+            //continue;
         //}
 
         polledChar += number0;
@@ -607,18 +607,25 @@ IoD::IoD(bool cyclicSend,
 void IoD::reconnect()
 {
     serialCmdInterface::stop();
+    std::cout << "serialCmdInterface::stoped" << std::endl;
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
     serialCmdInterface::disconnect();
+    std::cout << "serialCmdInterface::disconnected" << std::endl;
     serialCmdInterface::clearBuffer();
+    std::cout << "serialCmdInterface::BufferCleared" << std::endl;
     serialCmdInterface::connect();
+    std::cout << "serialCmdInterface::connected" << std::endl;
 
     std::this_thread::sleep_for(std::chrono::seconds(1));
     serialCmdInterface::run();
+    std::cout << "serialCmdInterface::started" << std::endl;
     std::this_thread::sleep_for(std::chrono::seconds(1));
     initMCU();
+    std::cout << "MCU::Inited" << std::endl;
     writeConfig(true);
     writeOutputs(true);
+    std::cout << "config written" << std::endl;
 }
 size_t IoD::getBufOutCnt(){
     return getSizeBufOut();
