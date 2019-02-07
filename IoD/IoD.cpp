@@ -332,12 +332,9 @@ bool serialCmdInterface::connect()
 		port.set_option( asio_serial::parity( asio_serial::parity::none ) );
 		port.set_option( asio_serial::stop_bits( asio_serial::stop_bits::one ) );
 		port.set_option( asio_serial::character_size( 8 ) );
-        //std::cout<< "option were configured" << std::endl;
 		connectionEstablished=true;
-		//rtr=true;
 	}else{
 		connectionEstablished=false;
-		//rtr=false;
 	}
 	return connectionEstablished;
 }
