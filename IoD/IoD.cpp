@@ -625,13 +625,14 @@ void IoD::reconnect()
     std::cout << "MCU::Inited" << std::endl;
     writeConfig(true);
     writeOutputs(true);
-    std::cout << "config written" << std::endl;
+    std::cout << "config & outputes flushed" << std::endl;
 }
 size_t IoD::getBufOutCnt(){
     return getSizeBufOut();
 }
 void IoD::initMCU()
 {
+    mcuResetDone = false;
     while(!mcuResetDone){
         resetMCU();
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
