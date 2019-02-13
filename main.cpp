@@ -14,7 +14,7 @@ IoD::IoD globalIoD(false, 1000, "/dev/ttyACM0",57600);
 
 Module::ClockDistributer globalClockDistributer;
 Module::ModuleManager globalModuleManager;
-Clock::Clock globalClock(std::chrono::milliseconds(100), std::bind(&mainloop));
+Clock::Clock globalClock(std::chrono::milliseconds(15), std::bind(&mainloop));
 
 
 int main(int argc, char* argv[]){
@@ -56,8 +56,8 @@ void mainloop(){
                      globalSQLCon.getTimeString() <<
                      std::endl;
         std::this_thread::sleep_for(std::chrono::seconds(1));
-        globalIoD.reconnect();
-        globalClock.start();
+        //globalIoD.reconnect();
+        //globalClock.start();
     }
 }
 

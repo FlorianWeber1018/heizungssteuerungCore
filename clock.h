@@ -7,7 +7,7 @@
 #include <functional>
 namespace Clock{
 
-enum trigger{A_trigger, B_trigger};
+enum trigger{noTrigger, A_trigger, B_trigger};
 
 class Clock
 {
@@ -19,12 +19,16 @@ protected:
     void threadloopA();
     void threadloopB();
 
-    volatile trigger m_trigger = A_trigger;
+    std::chrono::milliseconds T;
+
+    std::mutex m_triggerMutex;
+    volatile trigger m_trigger = noTrigger;
+    trigger getTrigger();
+    void setTrigger(const trigger& newTrigger);
+    void setTriggerConditionary(const trigger& newTrigger, const trigger& waitTrigger);
 
     std::mutex m_CallbackMutex;
-    std::chrono::milliseconds T;
     std::function<void(void)> m_callback;
-    volatile bool m_run = false;
 private:
 
 };

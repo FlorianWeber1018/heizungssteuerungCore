@@ -16,16 +16,35 @@ Clock::Clock(std::chrono::milliseconds T, std::function<void(void)> callback)
 }
 
 void Clock::start(){
-    this->m_run = true;
+
+    setTrigger(A_trigger);
 }
 void Clock::stop(){
-    this->m_run = false;
+    setTrigger(noTrigger);
 }
-
+trigger Clock::getTrigger()
+{
+    m_triggerMutex.lock();
+    std::lock_guard<std::mutex> lg(m_triggerMutex, std::adopt_lock);
+    return m_trigger;
+}
+void Clock::setTrigger(const trigger& newTrigger)
+{
+    m_triggerMutex.lock();
+    std::lock_guard<std::mutex> lg(m_triggerMutex, std::adopt_lock);
+    m_trigger = newTrigger;
+}
+void Clock::setTriggerConditionary(const trigger& newTrigger, const trigger& waitTrigger)
+{
+    while(getTrigger() == waitTrigger) {
+        std::this_thread::sleep_for(std::chrono::microseconds(200));
+    }
+    setTrigger(newTrigger);
+}
 void Clock::threadloopA()
 {
     while(1){
-        while(m_trigger != A_trigger && m_run){      //wait for trigger from B
+        while(getTrigger() != A_trigger){      //wait for trigger from B
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
 
@@ -34,15 +53,16 @@ void Clock::threadloopA()
         m_CallbackMutex.lock();
         std::lock_guard<std::mutex> lg(m_CallbackMutex, std::adopt_lock);
 
-        m_trigger = B_trigger;      //trigger B
+        setTriggerConditionary(B_trigger, noTrigger);    //trigger B
 
         m_callback();
     }
 }
 void Clock::threadloopB()
+
 {
     while(1){
-        while(m_trigger != B_trigger && m_run){      //wait for trigger from A
+        while(getTrigger() != B_trigger){      //wait for trigger from A
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
 
@@ -51,7 +71,7 @@ void Clock::threadloopB()
         m_CallbackMutex.lock();
         std::lock_guard<std::mutex> lg(m_CallbackMutex, std::adopt_lock);
 
-        m_trigger = A_trigger;      //trigger A
+        setTriggerConditionary(A_trigger, noTrigger);      //trigger A
 
         m_callback();
     }

@@ -443,7 +443,6 @@ void serialCmdInterface::Listening()
 	listenEnable=true;
 	std::string tempIn;
 	while (listenEnable) {
-
 		char polledChar = 0;
         //try{
             serialCmdInterface::pollOne(&polledChar);
@@ -456,7 +455,7 @@ void serialCmdInterface::Listening()
 		if(polledChar == eot){
 			serialDispatcher(tempIn);
             recCount++;
-            std::this_thread::sleep_for(std::chrono::microseconds(200));
+            //std::this_thread::sleep_for(std::chrono::microseconds(200));
 			tempIn = "";
 		}else{
 			tempIn += polledChar;
@@ -472,7 +471,7 @@ void serialCmdInterface::Sending()
 
         if(!getEmptyBufOut()){
             std::string sendString = takeElementFromBufOut();
-            sendOne(sendString);
+            if(! sendOne(sendString)) return;
             sendCount++;
 			//}
 		}else{
@@ -490,15 +489,16 @@ bool serialCmdInterface::sendOne(std::string &m_string)
 		m_string[i] -= number0;
 	}
 	if(connectionEstablished){
-        //try{
+        try{
             boost::asio::write( port, boost::asio::buffer( m_string, bytesToSend ) );
-        //}
-        //catch(...){
+        }catch(boost::system::system_error &e){
+            std::cout << "error Occured:" << e.what() << "code" << e.code() << std::endl;
+            return false;
+        }
             return true;
-        //}
 	}else{
 
-		return true;
+        return false;
 	}
 	return false;
 }
@@ -537,6 +537,8 @@ bool serialCmdInterface::getEmptyBufOut()
 }
 void serialCmdInterface::clearBuffer()
 {
+    mutexBufOut.lock();
+    std::lock_guard<std::mutex> lg(mutexBufOut, std::adopt_lock);
     bufOut.clear();
 }
 std::string serialCmdInterface::to_flushString(int16_t number)
