@@ -336,6 +336,7 @@ int Module::getParamValue(const std::string& paramKey){
         if (debugMode) {
           std::cout << "exception was cought : " << e.what() << std::endl;
         }
+        return 0;
     }
 }
 void Module::getParamFromServerIfExists(const std::string& paramKey, int &outParam)
@@ -588,7 +589,7 @@ void Module_MedianFilter::process() {
     std::cout << "Module_MedianFilter::process()" << std::endl;
   }
 
-  int NewSize = getParamValue("size");
+  size_t NewSize = static_cast<uint>(getParamValue("size"));
   int NewValue = getSignalValue("S");
 
   m_values.push_back(NewValue);
@@ -732,7 +733,7 @@ void Module_AND::process()
     for(auto&& element : m_slots)
     {
         if(element.second->connected()){
-            if( ! getSignalValue(element.first) > 0 ){
+            if( ! (getSignalValue(element.first) > 0) ){
                 result &= false;
             }
         }

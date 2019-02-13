@@ -34,6 +34,7 @@ std::string mysqlcon::getTimeString()
         mysql_free_result(res);
         return row[0];
     }
+    return "";
 }
 pt::ptree mysqlcon::MYSQL_RES_to_ptree(MYSQL_RES* resultset, unsigned int keyColNumber)
 {
@@ -119,6 +120,8 @@ bool mysqlcon::sendCUD(const std::string& sendstring)
         }else{
             return true;
         }
+    }else{
+        return false;
     }
 }
 unsigned int mysqlcon::getAffectedRows(){

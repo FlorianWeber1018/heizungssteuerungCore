@@ -10,14 +10,14 @@
 #include <thread>
 #include "serveradress.h"
 mSQL::mysqlcon globalSQLCon(serveradress,3306,"IoD","637013","heating");
-IoD::IoD globalIoD(false, 1000, "/dev/ttyACM0",57600);
+IoD::IoD globalIoD(true, 500, "/dev/ttyACM0",57600);
 
 Module::ClockDistributer globalClockDistributer;
 Module::ModuleManager globalModuleManager;
-Clock::Clock globalClock(std::chrono::milliseconds(15), std::bind(&mainloop));
+Clock::Clock globalClock(std::chrono::milliseconds(50), std::bind(&mainloop));
 
 
-int main(int argc, char* argv[]){
+int main(){
     std::thread t(REST::restMain);//start REST ASYNC
     t.detach();
     globalClock.start();
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
 
 void mainloop(){
     static volatile bool firstRun=true;
-    if(globalIoD.getBufOutCnt() <=50){
+    if(globalIoD.getBufOutCnt() <=200){
         if(firstRun){
             firstRun=false; //inputs not yet available
         }else{
@@ -50,12 +50,12 @@ void mainloop(){
         }
         globalIoD.readInputs(false);
     }else{
-        globalClock.stop();
+        //globalClock.stop();
         std::cout << "buff isn t sended completely." <<
-                     " Cycle was skiped! trying to reconnect to mcu Time: " <<
+                     " Cycle was skiped! Time: " <<
                      globalSQLCon.getTimeString() <<
                      std::endl;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        //std::this_thread::sleep_for(std::chrono::seconds(1));
         //globalIoD.reconnect();
         //globalClock.start();
     }

@@ -312,7 +312,6 @@ void ModuleManager::createConnectionOrUpdateOnServer(
 
     MYSQL_RES *result = globalSQLCon.sendCommand(query);
 
-    MYSQL_ROW row;
     if (result != nullptr) {
         mysql_free_result(result);
     }
@@ -349,13 +348,16 @@ void ModuleManager::deleteConnectionOnServer(unsigned int destModuleID, std::str
 void ModuleManager::deleteConnection(unsigned int destModuleID, std::string destSlotName) //for rest (public)
 {
     if(destModuleID == 0){
-        if(destSlotName.size()>1 && destSlotName.at(0)== 'I');
-        Slot* _slot = globalIoD.getSlot(std::stoi(destSlotName.substr(1)));
-        if(_slot != nullptr){
-            _slot->breakConnectionToSignal();
-            m_connections.erase(std::make_pair(destModuleID, destSlotName));
-            deleteConnectionOnServer(destModuleID, destSlotName);
-            globalIoD.syncInUse();
+        if(destSlotName.size()>1){
+            if(destSlotName.at(0)== 'I'){
+                Slot* _slot = globalIoD.getSlot(std::stoi(destSlotName.substr(1)));
+                if(_slot != nullptr){
+                    _slot->breakConnectionToSignal();
+                    m_connections.erase(std::make_pair(destModuleID, destSlotName));
+                    deleteConnectionOnServer(destModuleID, destSlotName);
+                    globalIoD.syncInUse();
+                }
+            }
         }
     }else{
         Module** destModule;

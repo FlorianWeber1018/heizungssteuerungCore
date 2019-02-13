@@ -51,7 +51,7 @@
 
     #define cmdresetMCU (cmdDebug2+1)
 
-	#define SizeBufOutMax 120
-	#define SizeBufInMax 400
+    #define SizeBufOutMax 512
+    //#define SizeBufInMax 400
 
 #endif /* PROTKOLDEF_H_ */

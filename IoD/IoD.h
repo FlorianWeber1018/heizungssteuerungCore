@@ -86,7 +86,7 @@ class serialCmdInterface
 		void run();
 		void stop();
         //debug Functions
-		const void plotFlushStringToConsole(const std::string& flushString);
+        void plotFlushStringToConsole(const std::string& flushString);
         size_t getSizeBufOut();
         bool getEmptyBufOut();
 	protected:

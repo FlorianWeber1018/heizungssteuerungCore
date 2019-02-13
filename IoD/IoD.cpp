@@ -124,7 +124,7 @@ pt::ptree IoPin::getProperties()
 
 
     std::string conf_Mode;
-    if(config >= 0 && config <= 1)
+    if(config <= 1)
     {//input
         tree.put_child("signal", get_signal().getProperties());
         conf_Mode = "Input";
@@ -203,7 +203,7 @@ pt::ptree AdcPin::getProperties()
     bool conf_SensorConvEn = (config & 2) == 2 ? true : false;
 
     std::string conf_SenseType;
-    if(config >= 0 && config <= 3)
+    if(config <= 3)
     {
         conf_SenseType = "PT1000";
     }
@@ -578,7 +578,7 @@ int16_t serialCmdInterface::to_int16_t(const std::string& flushString)
 	result |= ( ( flushString[3] - number0 ) & 0x0F ) << 12;
 	return result;
 }
-const void serialCmdInterface::plotFlushStringToConsole(const std::string& flushString)
+void serialCmdInterface::plotFlushStringToConsole(const std::string& flushString)
 {
 	for (std::string::size_type i = 0; i < flushString.length(); ++i){
 		  std::cout << " " << std::hex << std::setfill('0') << std::setw(2) << std::nouppercase << (unsigned char)flushString[i] - 1;
@@ -935,7 +935,6 @@ void IoD::changeConfig(char portType, int number, uint8_t newConfig)
         }else if(portType == 'I' || portType == 'i'){
             _io_p->set_targetConfig(newConfig); ///CHANGE CONFIG IN PIN
             changeConfigOnSqlServer(portType, number, newConfig);
-            char newMap = oldMap; //init useless, only safety
             if (newConfig == 0 || newConfig == 1 ){
                 if(oldMap == 'O'){//new=input old=output
                     ioMapInput[number] = ioMapOutput[number];
