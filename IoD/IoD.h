@@ -114,7 +114,6 @@ class serialCmdInterface
 		int pollOne(char* buffer);
         bool sendOne(std::string &m_string);
 
-		volatile bool rtr;
 		//convert Functions especialy for the Protocol
         std::string to_flushString(int16_t number);
         std::string to_flushString(uint8_t number);
