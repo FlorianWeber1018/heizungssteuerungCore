@@ -10,11 +10,11 @@
 #include <thread>
 #include "serveradress.h"
 mSQL::mysqlcon globalSQLCon(serveradress,3306,"IoD","637013","heating");
-IoD::IoD globalIoD(true, 500, "/dev/ttyACM0",57600);
+IoD::IoD globalIoD(false, 500, "/dev/ttyS0",57600);
 
 Module::ClockDistributer globalClockDistributer;
 Module::ModuleManager globalModuleManager;
-Clock::Clock globalClock(std::chrono::milliseconds(50), std::bind(&mainloop));
+Clock::Clock globalClock(std::chrono::milliseconds(500), std::bind(&mainloop));
 
 
 int main(){

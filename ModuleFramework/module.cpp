@@ -670,7 +670,7 @@ void Module_Woodstove::process() {
   }
   if(!m_timer.getAlarmState()){//counter is running
     emitSignal("fan", 1);
-    if(pumpState == 1){
+    if(pumpState == 1 && m_timer.getSecondsToAlarm() < reloadCnt){
       m_timer.reload(reloadCnt);
     }
     emitSignal("cnt", m_timer.getSecondsToAlarm());
