@@ -610,8 +610,9 @@ void IoD::reconnect()
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
     serialCmdInterface::disconnect();
-    std::cout << "serialCmdInterface::disconnected" << std::endl;
+    std::cout << "serialCmdInterface::disconnected waiting 10 secs" << std::endl;
     serialCmdInterface::clearBuffer();
+    std::this_thread::sleep_for(std::chrono::seconds(10));
     std::cout << "serialCmdInterface::BufferCleared" << std::endl;
     serialCmdInterface::connect();
     std::cout << "serialCmdInterface::connected" << std::endl;

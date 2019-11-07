@@ -10,7 +10,7 @@
 #include <thread>
 #include "serveradress.h"
 mSQL::mysqlcon globalSQLCon(serveradress,3306,"IoD","637013","heating");
-IoD::IoD globalIoD(false, 500, "/dev/ttyS0",57600);
+IoD::IoD globalIoD(false, 500, "/dev/ttyACM1",57600);
 
 Module::ClockDistributer globalClockDistributer;
 Module::ModuleManager globalModuleManager;
@@ -50,14 +50,14 @@ void mainloop(){
         }
         globalIoD.readInputs(false);
     }else{
-        //globalClock.stop();
+        globalClock.stop();
         std::cout << "buff isn t sended completely." <<
                      " Cycle was skiped! Time: " <<
                      globalSQLCon.getTimeString() <<
                      std::endl;
-        //std::this_thread::sleep_for(std::chrono::seconds(1));
-        //globalIoD.reconnect();
-        //globalClock.start();
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        globalIoD.reconnect();
+        globalClock.start();
     }
 }
 

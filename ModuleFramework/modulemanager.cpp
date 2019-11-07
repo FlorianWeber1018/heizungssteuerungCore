@@ -173,7 +173,7 @@ void ModuleManager::getModulesFromServer(std::map<unsigned int, ModuleDescriptio
     if (result != nullptr) {
         while (row = mysql_fetch_row(result)) {
             outMap[static_cast<unsigned int>(std::stol(row[0]))].TYPE = row[1];
-            outMap[static_cast<unsigned int>(std::stol(row[0]))].UserDescription = row[2];
+            outMap[static_cast<unsigned int>(std::stol(row[0]))].UserDescription = (row[2] == nullptr) ? "" : row[2];
         }
         mysql_free_result(result);
     }
